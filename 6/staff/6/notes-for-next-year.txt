@@ -1,0 +1,73 @@
+WARNINGS/SUGGESTIONS:
+
+- DO NOT USE THE SCRIPT FOR WINDOWS! It does not automatically
+  kill worker server instances after the computation finishes like
+  the OSX and Linux scripts do! We need to fix this problem if we
+  want to release a script specifically for windows!
+  We should just require students to install Putty or something
+  like that if they want to test their code on Windows...
+  the bash shell scripts are the only scripts that currently work
+  correctly.
+
+- We should give more explicit instructions on how we expect students to
+  their code for robustness. If they want to test their code for robustness,
+  they currently have to modify the scripts in order to do so themselves.
+  We may want to also give students the "robusttest.sh" script
+  to use for testing.
+
+- Make sure students log exceptions before throwing them
+  inside Callable#call(). This was the #1 source of confusion
+  for students this semester! Too many students simply ignored
+  exceptions inside their callables and had no idea where to
+  begin debugging as a result. The recitation 13 source code
+  has been modified to emphasize that you should catch-log-rethrow
+  exceptions if one occurs inside the Callable#call() method,
+  so hopefully that will make it more obvious to students that
+  they should do this.
+
+- Encourage students to use the synchronized keyword to protect
+  their code from race conditions (discourage using a concurrent
+  hash map and/or collections.synchronizedMap(), as these
+  won't protect against all possible race conditions in this
+  assignment).
+
+STUFF THAT NEEDS TO CHANGE:
+
+- Allow RMI? As long as the system works on separated computers, it should be fine. 
+
+- IMPORTANT: Require students write their intermediate/final results
+  in a specific, human-readable format (i.e. the handout needs to
+  explicitly require that students write their key/value pairs as
+  Strings in a text file... some students used ObjectOutputStreams
+  to write String objects to a text file and the result is a bunch
+  of human-unreadable raw bytes, making grading very difficult...).
+
+  One way to fix this would be to include the "FileEmitter" as part
+  of the starter code. Last semester many students made hugely complicated
+  FileEmitters which is totally not necessary. As you can see, our
+  staff solution implements the Emitter in about 10 simple lines.
+
+- IMPORTANT: It is currently unclear what information needs to be sent back to the
+  AbstractClient when the map/reduce computation is complete. We should
+  require the master server sends back the host/port/file paths for each
+  reduce worker's final results file. We should also require students
+  print this information to the console when it has been received.
+
+  One way to fix this would be to include the "MapReduceResult" as part of
+  the student starter code and then require that the MasterServer sends
+  back a List<MapReduceResult> to the client. Then the client can simply
+  print the List to standard output once it has been received.
+
+- We should probably require that students implement runnable handlers for their
+  master server (i.e. execute client requests on a separate thread, allowing
+  ServerSocket#accept() to block for as long as possible). In other words,
+  the master server should run forever, listening on serverSocket.accept(),
+  and serving one client request at a time using a single-threaded executor service.
+  See the reference solution for clarification about what this means.
+
+OTHER IDEAS:
+
+- It is not very easy to test the case that the reduce worker fails, so maybe
+  we shouldn't require them to implement this case for robustness. The assignment
+  is difficult enough as is, anyway.
+  assignment is pretty hard as it is anyway.

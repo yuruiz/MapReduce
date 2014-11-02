@@ -1,12 +1,12 @@
 package master;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +17,6 @@ import java.util.concurrent.TimeoutException;
 import worker.*;
 
 public class MasterHeartBeat implements Runnable {
-	private final int pollingPort;
 
 	private List<WorkerInfo> workers;
 	private List<WorkerInfo> failedWorkers;
@@ -27,9 +26,11 @@ public class MasterHeartBeat implements Runnable {
 	private final int sleepTime;
 
 	public MasterHeartBeat(int pollingPort, int timeOut, int sleepTime) {
-		this.pollingPort = pollingPort;
 		this.timeOut = timeOut;
 		this.sleepTime = sleepTime;
+		workers = new ArrayList<WorkerInfo>();
+		failedWorkers = new CopyOnWriteArrayList<WorkerInfo>();
+		workingWorkers = new CopyOnWriteArrayList<WorkerInfo>();
 	}
 
 	@Override
@@ -50,6 +51,11 @@ public class MasterHeartBeat implements Runnable {
 				}
 				workingWorkers.remove(worker);
 			}
+		}
+		try {
+			Thread.sleep(sleepTime);
+		} catch (InterruptedException e) {
+			// Ignore this
 		}
 	}
 

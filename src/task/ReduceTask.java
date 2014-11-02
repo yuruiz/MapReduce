@@ -1,7 +1,5 @@
 package task;
 
-import java.io.Serializable;
+public class ReduceTask {
 
-public interface ReduceTask extends Serializable {
-	
 }

@@ -1,3 +1,5 @@
+package util;
+
 public class Config {
-	public static final int MASTER_PORT;
+	public static int MASTER_PORT;
 }

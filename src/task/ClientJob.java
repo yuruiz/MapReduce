@@ -1,15 +1,16 @@
 package task;
 
+import java.io.Serializable;
 import java.util.List;
 
-import util.InputFile;
+public interface ClientJob extends Serializable {
 
-public interface ClientJob {
-
-	public List<InputFile> getfiles();
+	public List<String> getfiles();
 
 	public MapReduceJob getJob();
 
 	public int getMaxReduceFile();
+
+	public int getId();
 
 }

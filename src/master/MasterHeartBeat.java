@@ -14,42 +14,42 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import util.Constant;
 import worker.*;
 
 public class MasterHeartBeat implements Runnable {
 
-	private List<WorkerInfo> workers;
-	private List<WorkerInfo> failedWorkers;
-	private List<WorkerInfo> workingWorkers;
-
 	private final int timeOut;
 	private final int sleepTime;
+
+	private Master master;
 
 	public MasterHeartBeat(int pollingPort, int timeOut, int sleepTime) {
 		this.timeOut = timeOut;
 		this.sleepTime = sleepTime;
-		workers = new ArrayList<WorkerInfo>();
-		failedWorkers = new CopyOnWriteArrayList<WorkerInfo>();
-		workingWorkers = new CopyOnWriteArrayList<WorkerInfo>();
+	}
+
+	public void setMaster(Master master) {
+		this.master = master;
 	}
 
 	@Override
 	public void run() {
-		for (WorkerInfo worker : workers) {
+		for (WorkerInfo worker : master.getWorkers()) {
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			Future<String> future = executor.submit(new PollingThread(worker));
 
 			try {
-				future.get(timeOut, TimeUnit.MILLISECONDS);
+				String response = future.get(timeOut, TimeUnit.MILLISECONDS);
+				if (response == Constant.HEART_BEAT_RESPONSE) {
+					master.addWorker(worker);
+				}
 			} catch (InterruptedException e) {
 				// Ignores it
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			} catch (TimeoutException e) {
-				if (!failedWorkers.contains(worker)) {
-					failedWorkers.add(worker);
-				}
-				workingWorkers.remove(worker);
+				master.removeWorker(worker);
 			}
 		}
 		try {
@@ -69,10 +69,11 @@ public class MasterHeartBeat implements Runnable {
 
 		@Override
 		public String call() throws Exception {
-			Socket poll = new Socket(worker.getIpAddress(), worker.getPort());
+			Socket poll = new Socket(worker.getIpAddress(),
+					worker.getPollingPort());
 			PrintWriter writer = new PrintWriter(poll.getOutputStream());
 			Scanner s = new Scanner(poll.getInputStream());
-			writer.println("Still Working?");
+			writer.println(Constant.HEART_BEAT_QUERY);
 			String response = s.nextLine();
 			s.close();
 			poll.close();

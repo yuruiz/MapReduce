@@ -15,6 +15,10 @@ public class Partition implements Serializable {
 	private String fileName;
 	private List<WorkerInfo> owners;
 
+	public int getLength() {
+		return endIndex - startIndex + 1;
+	}
+
 	public int getStartIndex() {
 		return startIndex;
 	}

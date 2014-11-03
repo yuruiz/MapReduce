@@ -35,7 +35,27 @@ public class KeyValuePair implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return key.hashCode() + value.hashCode();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (key == null ? 0 : key.hashCode());
+		result = prime * result + (value == null ? 0 : value.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof KeyValuePair)) {
+			return false;
+		}
+		KeyValuePair other = (KeyValuePair) o;
+		return equals(key, other.key) && equals(value, other.value);
+	}
+
+	private static boolean equals(Object o1, Object o2) {
+		return o1 == null ? o2 == null : o1.equals(o2);
 	}
 
 }

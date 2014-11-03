@@ -1,10 +1,23 @@
 package util;
 
+import java.util.List;
+
 import worker.WorkerInfo;
 
 public class InputFile {
 	private String fileName;
-	private WorkerInfo location;
+	private List<WorkerInfo> locations;
+	private int length;
+
+	public InputFile(String fileName, List<WorkerInfo> locations, int length) {
+		this.fileName = fileName;
+		this.locations = locations;
+		this.length = length;
+	}
+
+	public InputFile(String fileName) {
+		this.fileName = fileName;
+	}
 
 	public String getFileName() {
 		return fileName;
@@ -14,12 +27,24 @@ public class InputFile {
 		this.fileName = fileName;
 	}
 
-	public WorkerInfo getLocation() {
-		return location;
+	public List<WorkerInfo> getLocations() {
+		return locations;
 	}
 
-	public void setLocation(WorkerInfo location) {
-		this.location = location;
+	public void addLocation(WorkerInfo w) {
+		this.locations.add(w);
+	}
+
+	public void setLocations(List<WorkerInfo> locations) {
+		this.locations = locations;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
 	}
 
 	@Override

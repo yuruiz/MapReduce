@@ -17,7 +17,6 @@ public class MasterJob {
 		mappers = new ArrayList<MapTask>();
 		reducers = new ArrayList<ReduceTask>();
 		partitions = new HashSet<Partition>();
-
 	}
 
 	public List<MapTask> getMappers() {

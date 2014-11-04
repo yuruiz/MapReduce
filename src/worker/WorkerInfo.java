@@ -7,7 +7,7 @@ import java.util.List;
 import task.MapTask;
 import task.ReduceTask;
 
-public class WorkerInfo implements Serializable {
+public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 	/**
 	 * 
 	 */
@@ -71,7 +71,12 @@ public class WorkerInfo implements Serializable {
 		return reduceTasks;
 	}
 
-	public int runningTask() {
+	public int numTasks() {
 		return mapTasks.size() + reduceTasks.size();
+	}
+
+	@Override
+	public int compareTo(WorkerInfo o) {
+		return this.numTasks() - o.numTasks();
 	}
 }

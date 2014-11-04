@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import worker.*;
@@ -129,6 +130,13 @@ public class Master {
 		}
 	}
 
+	/**
+	 * Assign the map tasks to all the working workers
+	 * 
+	 * @param partitions
+	 * @param job
+	 * @param load
+	 */
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
 		synchronized (workingWorkers) {
@@ -188,6 +196,22 @@ public class Master {
 			}
 
 		}
+	}
+
+	/**
+	 * Assign the workers with the least tasks to do as the reducers
+	 * 
+	 * @return
+	 */
+	private synchronized List<WorkerInfo> getReducers(int num) {
+		num = Math.min(num, workingWorkers.size());
+		List<WorkerInfo> reducers = new ArrayList<WorkerInfo>();
+		PriorityQueue<WorkerInfo> queue = new PriorityQueue<WorkerInfo>();
+		queue.addAll(workingWorkers);
+		for (int i = 0; i < num; i++) {
+			reducers.add(queue.poll());
+		}
+		return reducers;
 	}
 
 	public List<Partition> divideData(ClientJob job) {

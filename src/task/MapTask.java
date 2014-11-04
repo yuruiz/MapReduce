@@ -13,8 +13,10 @@ public class MapTask implements Serializable {
 	 */
 	private static final long serialVersionUID = -5483890248653777591L;
 	private long id;
-	private WorkerInfo worker;
 	private int load;
+
+	private WorkerInfo worker;
+	private List<WorkerInfo> reducers;
 	private List<Partition> partitions;
 
 	public MapTask(long id, WorkerInfo worker, int load) {
@@ -54,5 +56,13 @@ public class MapTask implements Serializable {
 
 	public void increaseLoad(int load) {
 		this.load = load;
+	}
+
+	public List<WorkerInfo> getReducers() {
+		return reducers;
+	}
+
+	public void setReducers(List<WorkerInfo> reducers) {
+		this.reducers = reducers;
 	}
 }

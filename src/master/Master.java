@@ -115,24 +115,29 @@ public class Master {
 		}
 	}
 
+	
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
 		synchronized (workingWorkers) {
 			MasterJob masterJob = new MasterJob();
-			int id = 0;
+			masterJob.setId(System.currentTimeMillis());
 			for (WorkerInfo worker : workingWorkers) {
-				masterJob.addMapTask(new MapTask(id, worker, load));
+				masterJob.addMapTask(new MapTask(masterJob.getId(), worker,
+						load));
 			}
 			int i = 0;
-			for (MapTask task : masterJob.getMappers()) {
-				if (i >= partitions.size()) {
-					break;
-				}
+			outer: for (MapTask task : masterJob.getMappers()) {
+
 				while (task.getLoad() < load) {
 					Partition p = partitions.get(i);
 					task.addPartition(p);
 					task.increaseLoad(p.getLength());
+
+					if (i >= partitions.size()) {
+						break outer;
+					}
 				}
+
 				Message message = new Message();
 				message.setJob(job);
 				message.setMapTask(task);

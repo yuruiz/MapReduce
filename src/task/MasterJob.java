@@ -11,6 +11,7 @@ public class MasterJob {
 	private List<MapTask> mappers;
 	private List<ReduceTask> reducers;
 	private Set<Partition> partitions;
+	private long id;
 
 	public MasterJob() {
 		mappers = new ArrayList<MapTask>();
@@ -37,6 +38,14 @@ public class MasterJob {
 
 	public Set<Partition> getPartitions() {
 		return partitions;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 
 }

@@ -12,13 +12,12 @@ public class MapTask implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -5483890248653777591L;
-	private int id;
+	private long id;
 	private WorkerInfo worker;
 	private int load;
 	private List<Partition> partitions;
-	
 
-	public MapTask(int id, WorkerInfo worker, int load) {
+	public MapTask(long id, WorkerInfo worker, int load) {
 		this.id = id;
 		this.worker = worker;
 		this.load = load;
@@ -41,11 +40,11 @@ public class MapTask implements Serializable {
 		this.partitions.add(p);
 	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 

@@ -3,11 +3,9 @@ package task;
 import java.io.Serializable;
 import java.util.List;
 
-public interface ClientJob extends Serializable {
+public interface ClientJob extends Serializable, MapReduceJob {
 
 	public List<String> getfiles();
-
-	public MapReduceJob getJob();
 
 	public int getMaxReduceFile();
 

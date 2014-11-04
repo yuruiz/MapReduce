@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
@@ -17,6 +18,7 @@ import task.MapTask;
 import task.MasterJob;
 import util.Config;
 import util.InputFile;
+import util.Message;
 import util.Partition;
 
 public class Master {
@@ -131,7 +133,25 @@ public class Master {
 					task.addPartition(p);
 					task.increaseLoad(p.getLength());
 				}
+				Message message = new Message();
+				message.setJob(job);
+				message.setMapTask(task);
+				try {
+					Socket toWorker = new Socket(task.getWorker()
+							.getIpAddress(), task.getWorker().getPort());
+					ObjectOutputStream out = new ObjectOutputStream(
+							toWorker.getOutputStream());
+					out.writeObject(message);
+					toWorker.close();
+				} catch (UnknownHostException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
+
 		}
 	}
 

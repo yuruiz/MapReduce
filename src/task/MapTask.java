@@ -16,6 +16,7 @@ public class MapTask implements Serializable {
 	private WorkerInfo worker;
 	private int load;
 	private List<Partition> partitions;
+	
 
 	public MapTask(int id, WorkerInfo worker, int load) {
 		this.id = id;

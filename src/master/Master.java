@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -24,7 +25,7 @@ import util.Partition;
 public class Master {
 
 	private MasterHeartBeat hearBeat;
-	private List<ClientJob> runningJobs;
+	private List<MasterJob> runningJobs;
 	private DFSManager manager;
 	private List<WorkerInfo> workers;
 	private List<WorkerInfo> failedWorkers;
@@ -38,6 +39,11 @@ public class Master {
 		workers = new ArrayList<WorkerInfo>();
 		failedWorkers = new CopyOnWriteArrayList<WorkerInfo>();
 		workingWorkers = new CopyOnWriteArrayList<WorkerInfo>();
+		runningJobs = new CopyOnWriteArrayList<MasterJob>();
+		hearBeat = new MasterHeartBeat(Config.POLLING_PORT, Config.TIME_OUT,
+				Config.SLEEP_TIME);
+		hearBeat.setMaster(this);
+
 	}
 
 	/**
@@ -49,6 +55,14 @@ public class Master {
 		if (!failedWorkers.contains(failed)) {
 			failedWorkers.add(failed);
 		}
+	}
+
+	/**
+	 * 
+	 * @param w
+	 */
+	private void handleFailure(WorkerInfo w) {
+
 	}
 
 	/**
@@ -115,16 +129,29 @@ public class Master {
 		}
 	}
 
-	
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
 		synchronized (workingWorkers) {
+			/*
+			 * Create a new job
+			 */
 			MasterJob masterJob = new MasterJob();
 			masterJob.setId(System.currentTimeMillis());
+			runningJobs.add(masterJob);
+			/*
+			 * Create a new map task for each worker
+			 */
 			for (WorkerInfo worker : workingWorkers) {
-				masterJob.addMapTask(new MapTask(masterJob.getId(), worker,
-						load));
+
+				MapTask t = new MapTask(masterJob.getId(), worker, load);
+				masterJob.addMapTask(t);
+				worker.addMapTask(t);
+
 			}
+
+			/*
+			 * Assign partitions to each map task
+			 */
 			int i = 0;
 			outer: for (MapTask task : masterJob.getMappers()) {
 
@@ -138,6 +165,9 @@ public class Master {
 					}
 				}
 
+				/*
+				 * Send the map task to workers for execution
+				 */
 				Message message = new Message();
 				message.setJob(job);
 				message.setMapTask(task);

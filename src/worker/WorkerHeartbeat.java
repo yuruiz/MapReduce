@@ -1,5 +1,9 @@
 package worker;
 
-public class WorkerHeartbeat {
+public class WorkerHeartbeat implements Runnable {
 
+    @Override
+    public void run() {
+
+    }
 }

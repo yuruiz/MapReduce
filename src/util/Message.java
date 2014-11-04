@@ -1,45 +1,51 @@
 package util;
 
-import java.io.Serializable;
-import java.util.List;
-
 import task.MapReduceJob;
 import task.MapTask;
 import task.ReduceTask;
 
+import java.io.Serializable;
+
 public class Message implements Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7264137218310503076L;
+    /**
+     *
+     */
 
-	private MapReduceJob job;
-	private MapTask mapTask;
-	private ReduceTask reduceTask;
+    public enum MessageType {
+        MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, FILE_PUSH
+    }
 
-	public MapReduceJob getJob() {
-		return job;
-	}
+    private static final long serialVersionUID = 7264137218310503076L;
 
-	public void setJob(MapReduceJob job) {
-		this.job = job;
-	}
+    private MessageType type;
 
-	public MapTask getMapTask() {
-		return mapTask;
-	}
+    private MapReduceJob job;
+    private MapTask mapTask;
+    private ReduceTask reduceTask;
 
-	public void setMapTask(MapTask mapTask) {
-		this.mapTask = mapTask;
-	}
+    public MapReduceJob getJob() {
+        return job;
+    }
 
-	public ReduceTask getReduceTask() {
-		return reduceTask;
-	}
+    public void setJob(MapReduceJob job) {
+        this.job = job;
+    }
 
-	public void setReduceTask(ReduceTask reduceTask) {
-		this.reduceTask = reduceTask;
-	}
+    public MapTask getMapTask() {
+        return mapTask;
+    }
+
+    public void setMapTask(MapTask mapTask) {
+        this.mapTask = mapTask;
+    }
+
+    public ReduceTask getReduceTask() {
+        return reduceTask;
+    }
+
+    public void setReduceTask(ReduceTask reduceTask) {
+        this.reduceTask = reduceTask;
+    }
 
 }

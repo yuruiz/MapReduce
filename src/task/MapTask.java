@@ -12,7 +12,8 @@ public class MapTask implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -5483890248653777591L;
-	private long id;
+	private long jobId;
+	private int taskId;
 	private int load;
 
 	private WorkerInfo worker;
@@ -20,7 +21,7 @@ public class MapTask implements Serializable {
 	private List<Partition> partitions;
 
 	public MapTask(long id, WorkerInfo worker, int load) {
-		this.id = id;
+		this.jobId = id;
 		this.worker = worker;
 		this.load = load;
 		partitions = new ArrayList<Partition>();
@@ -42,12 +43,12 @@ public class MapTask implements Serializable {
 		this.partitions.add(p);
 	}
 
-	public long getId() {
-		return id;
+	public long getJobId() {
+		return jobId;
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public void setJobId(long id) {
+		this.jobId = id;
 	}
 
 	public int getLoad() {
@@ -64,5 +65,28 @@ public class MapTask implements Serializable {
 
 	public void setReducers(List<WorkerInfo> reducers) {
 		this.reducers = reducers;
+	}
+
+	public int getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(int taskId) {
+		this.taskId = taskId;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof MapTask)) {
+			return false;
+		}
+		MapTask t = (MapTask) o;
+		return this.jobId == t.jobId && this.taskId == t.taskId;
+
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) jobId + taskId;
 	}
 }

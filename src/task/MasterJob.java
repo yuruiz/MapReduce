@@ -11,6 +11,7 @@ public class MasterJob {
 	private List<MapTask> mappers;
 	private List<ReduceTask> reducers;
 	private Set<Partition> partitions;
+	private MapReduceJob job;
 	private long id;
 
 	public MasterJob() {
@@ -35,6 +36,14 @@ public class MasterJob {
 		partitions.add(p);
 	}
 
+	public void removeMapTask(MapTask t) {
+		mappers.remove(t);
+	}
+
+	public void removeReduceTask(ReduceTask t) {
+		reducers.remove(t);
+	}
+
 	public void setReducers(List<ReduceTask> reducers) {
 		this.reducers = reducers;
 	}
@@ -49,6 +58,14 @@ public class MasterJob {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public MapReduceJob getJob() {
+		return job;
+	}
+
+	public void setJob(MapReduceJob job) {
+		this.job = job;
 	}
 
 }

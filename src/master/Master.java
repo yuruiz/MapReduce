@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import worker.*;
@@ -22,12 +23,14 @@ import task.ReduceTask;
 import util.Config;
 import util.InputFile;
 import util.Message;
+import util.Message.MessageType;
 import util.Partition;
 
 public class Master {
 
 	private MasterHeartBeat hearBeat;
 	private List<MasterJob> runningJobs;
+	private Map<Long, MasterJob> idToJob;
 	private DFSManager manager;
 	private List<WorkerInfo> workers;
 	private List<WorkerInfo> failedWorkers;
@@ -45,6 +48,7 @@ public class Master {
 		hearBeat = new MasterHeartBeat(Config.POLLING_PORT, Config.TIME_OUT,
 				Config.SLEEP_TIME);
 		hearBeat.setMaster(this);
+		idToJob = new ConcurrentHashMap<Long, MasterJob>();
 
 	}
 
@@ -64,6 +68,32 @@ public class Master {
 	 * @param w
 	 */
 	private void handleFailure(WorkerInfo w) {
+		List<MapTask> failedMap = w.getMapTasks();
+		List<ReduceTask> failedReduce = w.getReduceTasks();
+		List<WorkerInfo> backups = getIdleWorkers(failedMap.size());
+		for (int i = 0; i < failedMap.size(); i++) {
+			MapTask t = failedMap.get(i);
+			WorkerInfo backup = backups.get(i % backups.size());
+			t.setWorker(backup);
+			Message m = new Message();
+			m.setType(MessageType.MAP_REQ);
+			m.setJob(idToJob.get(t.getJobId()).getJob());
+			try {
+				Socket socket = new Socket(backup.getIpAddress(),
+						backup.getPort());
+				ObjectOutputStream out = new ObjectOutputStream(
+						socket.getOutputStream());
+				out.writeObject(m);
+				socket.close();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
 
 	}
 
@@ -141,14 +171,20 @@ public class Master {
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
 
-		List<WorkerInfo> reducers = this.getReducers(job.getMaxReduceFile());
+		List<WorkerInfo> reducers = this.getIdleWorkers(job.getMaxReduceFile());
 
 		synchronized (workingWorkers) {
 
+			long jobId = System.currentTimeMillis();
+
 			List<ReduceTask> tasks = new ArrayList<ReduceTask>();
+			int reduceBaseId = 0;
 			for (WorkerInfo reducer : reducers) {
 				ReduceTask r = new ReduceTask();
 				r.setMappers(workingWorkers);
+				r.setReducer(reducer);
+				r.setJobId(jobId);
+				r.setJobId(reduceBaseId++);
 				reducer.addReduceTask(r);
 				tasks.add(r);
 			}
@@ -156,15 +192,20 @@ public class Master {
 			 * Create a new job
 			 */
 			MasterJob masterJob = new MasterJob();
-			masterJob.setId(System.currentTimeMillis());
+			masterJob.setId(jobId);
 			masterJob.setReducers(tasks);
+			masterJob.setJob(job);
 			runningJobs.add(masterJob);
+			idToJob.put(masterJob.getId(), masterJob);
+			int baseId = 0;
 			/*
 			 * Create a new map task for each worker
 			 */
 			for (WorkerInfo worker : workingWorkers) {
 
 				MapTask t = new MapTask(masterJob.getId(), worker, load);
+				t.setTaskId(baseId);
+				baseId++;
 				t.setReducers(reducers);
 				masterJob.addMapTask(t);
 				worker.addMapTask(t);
@@ -191,6 +232,7 @@ public class Master {
 				 * Send the map task to workers for execution
 				 */
 				Message message = new Message();
+				message.setType(MessageType.MAP_REQ);
 				message.setJob(job);
 				message.setMapTask(task);
 				try {
@@ -213,20 +255,21 @@ public class Master {
 	}
 
 	/**
-	 * Assign the workers with the least number of tasks running as the reducers
+	 * Assign the workers with the least amount of tasks running as the
+	 * relatively idle workers
 	 * 
 	 * @return
 	 */
-	private List<WorkerInfo> getReducers(int num) {
+	private List<WorkerInfo> getIdleWorkers(int num) {
 		synchronized (workingWorkers) {
 			num = Math.min(num, workingWorkers.size());
-			List<WorkerInfo> reducers = new ArrayList<WorkerInfo>();
+			List<WorkerInfo> idleWorkers = new ArrayList<WorkerInfo>();
 			PriorityQueue<WorkerInfo> queue = new PriorityQueue<WorkerInfo>();
 			queue.addAll(workingWorkers);
 			for (int i = 0; i < num; i++) {
-				reducers.add(queue.poll());
+				idleWorkers.add(queue.poll());
 			}
-			return reducers;
+			return idleWorkers;
 		}
 	}
 

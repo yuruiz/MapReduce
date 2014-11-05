@@ -18,6 +18,7 @@ import worker.*;
 import task.ClientJob;
 import task.MapTask;
 import task.MasterJob;
+import task.ReduceTask;
 import util.Config;
 import util.InputFile;
 import util.Message;
@@ -139,12 +140,24 @@ public class Master {
 	 */
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
+
+		List<WorkerInfo> reducers = this.getReducers(job.getMaxReduceFile());
+
 		synchronized (workingWorkers) {
+
+			List<ReduceTask> tasks = new ArrayList<ReduceTask>();
+			for (WorkerInfo reducer : reducers) {
+				ReduceTask r = new ReduceTask();
+				r.setMappers(workingWorkers);
+				reducer.addReduceTask(r);
+				tasks.add(r);
+			}
 			/*
 			 * Create a new job
 			 */
 			MasterJob masterJob = new MasterJob();
 			masterJob.setId(System.currentTimeMillis());
+			masterJob.setReducers(tasks);
 			runningJobs.add(masterJob);
 			/*
 			 * Create a new map task for each worker
@@ -152,6 +165,7 @@ public class Master {
 			for (WorkerInfo worker : workingWorkers) {
 
 				MapTask t = new MapTask(masterJob.getId(), worker, load);
+				t.setReducers(reducers);
 				masterJob.addMapTask(t);
 				worker.addMapTask(t);
 
@@ -199,19 +213,21 @@ public class Master {
 	}
 
 	/**
-	 * Assign the workers with the least tasks to do as the reducers
+	 * Assign the workers with the least number of tasks running as the reducers
 	 * 
 	 * @return
 	 */
-	private synchronized List<WorkerInfo> getReducers(int num) {
-		num = Math.min(num, workingWorkers.size());
-		List<WorkerInfo> reducers = new ArrayList<WorkerInfo>();
-		PriorityQueue<WorkerInfo> queue = new PriorityQueue<WorkerInfo>();
-		queue.addAll(workingWorkers);
-		for (int i = 0; i < num; i++) {
-			reducers.add(queue.poll());
+	private List<WorkerInfo> getReducers(int num) {
+		synchronized (workingWorkers) {
+			num = Math.min(num, workingWorkers.size());
+			List<WorkerInfo> reducers = new ArrayList<WorkerInfo>();
+			PriorityQueue<WorkerInfo> queue = new PriorityQueue<WorkerInfo>();
+			queue.addAll(workingWorkers);
+			for (int i = 0; i < num; i++) {
+				reducers.add(queue.poll());
+			}
+			return reducers;
 		}
-		return reducers;
 	}
 
 	public List<Partition> divideData(ClientJob job) {

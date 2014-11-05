@@ -35,6 +35,10 @@ public class MasterJob {
 		partitions.add(p);
 	}
 
+	public void setReducers(List<ReduceTask> reducers) {
+		this.reducers = reducers;
+	}
+
 	public Set<Partition> getPartitions() {
 		return partitions;
 	}

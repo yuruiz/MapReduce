@@ -77,7 +77,6 @@ public class Master {
 			t.setWorker(backup);
 			Message m = new Message();
 			m.setType(MessageType.MAP_REQ);
-			m.setJob(idToJob.get(t.getJobId()).getJob());
 			try {
 				Socket socket = new Socket(backup.getIpAddress(),
 						backup.getPort());
@@ -184,7 +183,8 @@ public class Master {
 				r.setMappers(workingWorkers);
 				r.setReducer(reducer);
 				r.setJobId(jobId);
-				r.setJobId(reduceBaseId++);
+				r.setTaskId(reduceBaseId++);
+				r.setJob(job);
 				reducer.addReduceTask(r);
 				tasks.add(r);
 			}
@@ -205,6 +205,7 @@ public class Master {
 
 				MapTask t = new MapTask(masterJob.getId(), worker, load);
 				t.setTaskId(baseId);
+				t.setJob(job);
 				baseId++;
 				t.setReducers(reducers);
 				masterJob.addMapTask(t);
@@ -233,7 +234,6 @@ public class Master {
 				 */
 				Message message = new Message();
 				message.setType(MessageType.MAP_REQ);
-				message.setJob(job);
 				message.setMapTask(task);
 				try {
 					Socket toWorker = new Socket(task.getWorker()

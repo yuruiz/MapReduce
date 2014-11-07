@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -205,7 +204,7 @@ public class Master {
 
 				MapTask t = new MapTask(masterJob.getId(), worker, load);
 				t.setTaskId(baseId);
-				t.setJob(job);
+				t.setMethod(job);
 				baseId++;
 				t.setReducers(reducers);
 				masterJob.addMapTask(t);

@@ -1,9 +1,9 @@
 package task;
 
+import worker.WorkerInfo;
+
 import java.io.Serializable;
 import java.util.List;
-
-import worker.WorkerInfo;
 
 public class ReduceTask implements Serializable {
 
@@ -18,7 +18,7 @@ public class ReduceTask implements Serializable {
 	private WorkerInfo reducer;
 	private long jobId;
 	private int taskId;
-	private MapReduceJob job;
+	private MapReduceMethod job;
 
 	public List<WorkerInfo> getMappers() {
 		return mappers;
@@ -52,11 +52,11 @@ public class ReduceTask implements Serializable {
 		this.taskId = taskId;
 	}
 
-	public MapReduceJob getJob() {
+	public MapReduceMethod getJob() {
 		return job;
 	}
 
-	public void setJob(MapReduceJob job) {
+	public void setJob(MapReduceMethod job) {
 		this.job = job;
 	}
 

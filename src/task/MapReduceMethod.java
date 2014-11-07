@@ -1,11 +1,11 @@
 package task;
 
+import util.KeyValuePair;
+
 import java.io.Serializable;
 import java.util.List;
 
-import util.KeyValuePair;
-
-public interface MapReduceJob extends Serializable {
+public interface MapReduceMethod extends Serializable {
 	/**
 	 * The map operation defined for this map/reduce job
 	 * 

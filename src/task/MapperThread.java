@@ -4,6 +4,7 @@ import util.FileReader;
 import util.FileWriter;
 import util.KeyValuePair;
 import util.Partition;
+import worker.WorkerInfo;
 
 import java.io.File;
 import java.util.HashMap;
@@ -13,13 +14,15 @@ import java.util.List;
 public class MapperThread extends Thread{
 
     private MapTask task;
-    long jobID;
-    int taskID;
+    private long jobID;
+    private int taskID;
+    private List<WorkerInfo> infos;
 
     public MapperThread(MapTask task) {
         this.task = task;
         this.jobID = task.getJobId();
         this.taskID = task.getTaskId();
+        this.infos = task.getReducers();
     }
 
     public void run() {
@@ -82,7 +85,7 @@ public class MapperThread extends Thread{
         for (int i = 0; i < reduceNum; i++) {
             List<KeyValuePair> templist = map.get(i);
 
-            String outputName = "Job_"+jobID+"_Task_"+taskID+"_ForReducer_"+i;
+            String outputName = "Job_"+jobID+"_Task_"+taskID+"_ForReducer_"+infos.get(i).getId();
 
             FileWriter outputfile = new FileWriter(outputName);
 

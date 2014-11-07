@@ -61,6 +61,7 @@ public class Master {
 		if (!failedWorkers.contains(failed)) {
 			failedWorkers.add(failed);
 		}
+		handleFailure(failed);
 	}
 
 	/**
@@ -69,7 +70,26 @@ public class Master {
 	 */
 	private void handleFailure(WorkerInfo w) {
 		List<MapTask> failedMap = w.getMapTasks();
+		w.setMapTasks(new ArrayList<MapTask>());
+		this.handleMapFailure(failedMap);
 		List<ReduceTask> failedReduce = w.getReduceTasks();
+		w.setReduceTasks(new ArrayList<ReduceTask>());
+		this.handleReduceFailure(failedReduce);
+
+	}
+
+	private void handleReduceFailure(List<ReduceTask> failedReduce) {
+		List<WorkerInfo> backups = this.getIdleWorkers(failedReduce.size());
+		for (int i = 0; i < failedReduce.size(); i++) {
+			WorkerInfo backup = backups.get(i % backups.size());
+			ReduceTask task = failedReduce.get(i);
+			task.setReducer(backup);
+			Message m = new Message();
+			m.setType(MessageType.RESEND);
+		}
+	}
+
+	private void handleMapFailure(List<MapTask> failedMap) {
 		List<WorkerInfo> backups = getIdleWorkers(failedMap.size());
 		for (int i = 0; i < failedMap.size(); i++) {
 			MapTask t = failedMap.get(i);
@@ -93,7 +113,6 @@ public class Master {
 			}
 
 		}
-
 	}
 
 	/**

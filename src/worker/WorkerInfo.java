@@ -71,6 +71,15 @@ public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 		return reduceTasks;
 	}
 
+	public void setMapTasks(List<MapTask> mapTasks) {
+		this.mapTasks = mapTasks;
+	}
+	
+	
+	public void setReduceTasks(List<ReduceTask> reduceTasks) {
+		this.reduceTasks = reduceTasks;
+	}
+
 	public int numTasks() {
 		return mapTasks.size() + reduceTasks.size();
 	}

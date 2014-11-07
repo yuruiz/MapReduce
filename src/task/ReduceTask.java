@@ -18,6 +18,7 @@ public class ReduceTask implements Serializable {
 	private WorkerInfo reducer;
 	private long jobId;
 	private int taskId;
+	private MapReduceJob job;
 
 	public List<WorkerInfo> getMappers() {
 		return mappers;
@@ -49,6 +50,14 @@ public class ReduceTask implements Serializable {
 
 	public void setTaskId(int taskId) {
 		this.taskId = taskId;
+	}
+
+	public MapReduceJob getJob() {
+		return job;
+	}
+
+	public void setJob(MapReduceJob job) {
+		this.job = job;
 	}
 
 }

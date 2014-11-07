@@ -15,6 +15,7 @@ public class MapTask implements Serializable {
 	private long jobId;
 	private int taskId;
 	private int load;
+	private MapReduceJob job;
 
 	private WorkerInfo worker;
 	private List<WorkerInfo> reducers;
@@ -88,5 +89,13 @@ public class MapTask implements Serializable {
 	@Override
 	public int hashCode() {
 		return (int) jobId + taskId;
+	}
+
+	public MapReduceJob getJob() {
+		return job;
+	}
+
+	public void setJob(MapReduceJob job) {
+		this.job = job;
 	}
 }

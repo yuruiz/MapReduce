@@ -12,7 +12,7 @@ public class Message implements Serializable {
      */
 
 	public enum MessageType {
-		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, FILE_PUSH, WORKER_REG
+		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, FILE_PUSH, WORKER_REG, RESEND
 	}
 
 	private static final long serialVersionUID = 7264137218310503076L;

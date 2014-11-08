@@ -55,7 +55,7 @@ public class ReduceTask implements Serializable {
 		this.taskId = taskId;
 	}
 
-	public MapReduceMethod getJob() {
+	public MapReduceMethod getMethod() {
 		return job;
 	}
 

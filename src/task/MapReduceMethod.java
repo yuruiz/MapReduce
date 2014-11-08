@@ -3,6 +3,7 @@ package task;
 import util.KeyValuePair;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public interface MapReduceMethod extends Serializable {
@@ -15,6 +16,6 @@ public interface MapReduceMethod extends Serializable {
 	 */
 	public List<KeyValuePair> map(String key, String value);
 
-	public KeyValuePair reduce(String key, String value);
+	public KeyValuePair reduce(String key, ArrayList<String> values);
 
 }

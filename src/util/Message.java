@@ -13,7 +13,7 @@ public class Message implements Serializable {
      */
 
 	public enum MessageType {
-		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, FILE_PUSH, WORKER_REG, RESEND
+		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, WORKER_REG, RESEND, FILE_REQ, JOB_DONE
 	}
 
 	private static final long serialVersionUID = 7264137218310503076L;
@@ -21,6 +21,8 @@ public class Message implements Serializable {
 	private MessageType type;
 	private MapTask mapTask;
 	private ReduceTask reduceTask;
+	private String fetcheFilename;
+	private WorkerInfo fetchworkerInfo;
 	// the job id
 	private long jobId;
 	private WorkerInfo receiver;
@@ -55,6 +57,22 @@ public class Message implements Serializable {
 
 	public void setJobId(long jobId) {
 		this.jobId = jobId;
+	}
+
+	public void setFetcheFilename(String filename) {
+		this.fetcheFilename = filename;
+	}
+
+	public String getFetcheFilename() {
+		return this.fetcheFilename;
+	}
+
+	public void setFetchworkerInfo(WorkerInfo info) {
+		this.fetchworkerInfo = info;
+	}
+
+	public WorkerInfo getFetchworkerInfo() {
+		return fetchworkerInfo;
 	}
 
 	public WorkerInfo getReceiver() {

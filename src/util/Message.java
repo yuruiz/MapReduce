@@ -24,6 +24,7 @@ public class Message implements Serializable {
     private String fetcheFilename;
     private WorkerInfo fetchworkerInfo;
 	private long jobId;
+	private WorkerInfo receiver;
 
 	public void setType(MessageType type) {
 		this.type = type;
@@ -72,5 +73,13 @@ public class Message implements Serializable {
     public WorkerInfo getFetchworkerInfo() {
         return fetchworkerInfo;
     }
+
+	public WorkerInfo getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(WorkerInfo receiver) {
+		this.receiver = receiver;
+	}
 
 }

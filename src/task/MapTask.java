@@ -1,11 +1,11 @@
 package task;
 
+import util.Partition;
+import worker.WorkerInfo;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import util.Partition;
-import worker.WorkerInfo;
 
 public class MapTask implements Serializable {
 	/**
@@ -15,7 +15,8 @@ public class MapTask implements Serializable {
 	private long jobId;
 	private int taskId;
 	private int load;
-	private MapReduceJob job;
+	private MapReduceMethod method;
+    boolean finished = false;
 
 	private WorkerInfo worker;
 	private List<WorkerInfo> reducers;
@@ -91,11 +92,11 @@ public class MapTask implements Serializable {
 		return (int) jobId + taskId;
 	}
 
-	public MapReduceJob getJob() {
-		return job;
+	public MapReduceMethod getMethod() {
+		return method;
 	}
 
-	public void setJob(MapReduceJob job) {
-		this.job = job;
+	public void setMethod(MapReduceMethod method) {
+		this.method = method;
 	}
 }

@@ -1,5 +1,7 @@
 package worker;
 
+import task.MapperThread;
+import task.ReducerThread;
 import util.Config;
 import util.Message;
 
@@ -18,7 +20,7 @@ public class Worker {
 	}
 
 	public void working() {
-		WorkerInfo info = new WorkerInfo(addr, port, pollport);
+		WorkerInfo info = Config.getWorkerInfo();
 
 	}
 
@@ -52,9 +54,18 @@ public class Worker {
 
 				switch (mesg.getType()) {
 				case MAP_REQ:
-					break;
+
+                    MapperThread mt = new MapperThread(mesg.getMapTask());
+
+                    mt.start();
+                    break;
 				case REDUCE_REQ:
-					break;
+
+                    ReducerThread rt = new ReducerThread(mesg.getReduceTask());
+
+                    rt.start();
+
+                    break;
 				case FILE_FETCH:
 					break;
 				case FILE_PUSH:

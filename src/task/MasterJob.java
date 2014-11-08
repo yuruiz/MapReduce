@@ -11,7 +11,7 @@ public class MasterJob {
 	private List<MapTask> mappers;
 	private List<ReduceTask> reducers;
 	private Set<Partition> partitions;
-	private MapReduceJob job;
+	private MapReduceMethod job;
 	private long id;
 
 	public MasterJob() {
@@ -60,11 +60,11 @@ public class MasterJob {
 		this.id = id;
 	}
 
-	public MapReduceJob getJob() {
+	public MapReduceMethod getJob() {
 		return job;
 	}
 
-	public void setJob(MapReduceJob job) {
+	public void setJob(MapReduceMethod job) {
 		this.job = job;
 	}
 

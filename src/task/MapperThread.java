@@ -1,9 +1,6 @@
 package task;
 
-import util.FileReader;
-import util.FileWriter;
-import util.KeyValuePair;
-import util.Partition;
+import util.*;
 import worker.WorkerInfo;
 
 import java.io.File;
@@ -37,7 +34,14 @@ public class MapperThread extends Thread{
 
             if (!file.exists()) {
                 System.out.println("File " + fileName + " not exist");
-                //todo: fetch file
+                FileTransmission.askforfile(fileName, p.getOwners());
+
+                file = new File(fileName);
+
+                if (!file.exists()) {
+                    System.out.println("Fetch file " + fileName + " failed at mapper task");
+                    return;
+                }
             }
 
             FileReader reader = new FileReader(fileName);
@@ -92,7 +96,5 @@ public class MapperThread extends Thread{
             outputfile.write(templist);
 
         }
-
-        //todo send the files to reducers
     }
 }

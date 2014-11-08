@@ -10,21 +10,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Worker {
 
 	WorkerInfo info;
+    ArrayList<String> filelist;
 
 	public Worker() {
-
-	}
-
-	public void working() {
-		WorkerInfo info = Config.getWorkerInfo();
-
-	}
-
-	public static void main() {
 
 	}
 
@@ -64,12 +57,12 @@ public class Worker {
                     ReducerThread rt = new ReducerThread(mesg.getReduceTask());
 
                     rt.start();
-
                     break;
 				case FILE_FETCH:
+
 					break;
-				case FILE_PUSH:
-					break;
+                case FILE_REQ:
+                    break;
 				default:
 					System.out.println("Error! Unknown Message Type received!");
 					break;

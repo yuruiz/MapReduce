@@ -15,6 +15,6 @@ public interface MapReduceJob extends Serializable {
 	 */
 	public List<KeyValuePair> map(String key, String value);
 
-	public KeyValuePair reduce(String key, String value);
+	public KeyValuePair reduce(String key, List<String> value);
 
 }

@@ -78,14 +78,39 @@ public class Master {
 
 	}
 
+	/**
+	 * 
+	 * @param failedReduce
+	 */
 	private void handleReduceFailure(List<ReduceTask> failedReduce) {
 		List<WorkerInfo> backups = this.getIdleWorkers(failedReduce.size());
+		/*
+		 * Reassign reduce task to working workers
+		 */
 		for (int i = 0; i < failedReduce.size(); i++) {
 			WorkerInfo backup = backups.get(i % backups.size());
 			ReduceTask task = failedReduce.get(i);
 			task.setReducer(backup);
 			Message m = new Message();
-			m.setType(MessageType.RESEND);
+			m.setType(MessageType.REDUCE_REQ);
+			m.setReduceTask(task);
+			try {
+				Socket socket = new Socket(backup.getIpAddress(),
+						backup.getPort());
+				ObjectOutputStream out = new ObjectOutputStream(
+						socket.getOutputStream());
+				out.writeObject(m);
+				socket.close();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (WorkerInfo w : task.getMappers()) {
+				
+			}
 		}
 	}
 

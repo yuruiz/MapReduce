@@ -2,6 +2,7 @@ package util;
 
 import task.MapTask;
 import task.ReduceTask;
+import worker.WorkerInfo;
 
 import java.io.Serializable;
 
@@ -21,6 +22,7 @@ public class Message implements Serializable {
 	private MapTask mapTask;
 	private ReduceTask reduceTask;
 	private long jobId;
+	private WorkerInfo receiver;
 
 	public void setType(MessageType type) {
 		this.type = type;
@@ -52,6 +54,14 @@ public class Message implements Serializable {
 
 	public void setJobId(long jobId) {
 		this.jobId = jobId;
+	}
+
+	public WorkerInfo getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(WorkerInfo receiver) {
+		this.receiver = receiver;
 	}
 
 }

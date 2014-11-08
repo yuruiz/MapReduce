@@ -34,6 +34,7 @@ public class Master {
 	private List<WorkerInfo> workers;
 	private List<WorkerInfo> failedWorkers;
 	private List<WorkerInfo> workingWorkers;
+	private boolean shutDown;
 
 	private Deque<ClientJob> toBeDone;
 
@@ -48,6 +49,7 @@ public class Master {
 				Config.SLEEP_TIME);
 		hearBeat.setMaster(this);
 		idToJob = new ConcurrentHashMap<Long, MasterJob>();
+		shutDown = false;
 
 	}
 
@@ -108,7 +110,7 @@ public class Master {
 				e.printStackTrace();
 			}
 			for (WorkerInfo w : task.getMappers()) {
-				
+
 			}
 		}
 	}
@@ -148,6 +150,30 @@ public class Master {
 			workingWorkers.add(recovered);
 		}
 		failedWorkers.remove(recovered);
+	}
+
+	public void handleMessage() {
+		try {
+			ServerSocket server = new ServerSocket(port);
+			while (!shutDown) {
+				Socket worker = server.accept();
+				ObjectOutputStream out = new ObjectOutputStream(
+						worker.getOutputStream());
+				ObjectInputStream in = new ObjectInputStream(
+						worker.getInputStream());
+				Message m = (Message) in.readObject();
+				switch (m.getType()) {
+				case MAP_RES:
+					
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -228,6 +254,7 @@ public class Master {
 				r.setJobId(jobId);
 				r.setTaskId(reduceBaseId++);
 				r.setJob(job);
+				r.setWorkerId(reducer.getId());
 				reducer.addReduceTask(r);
 				tasks.add(r);
 			}
@@ -292,6 +319,39 @@ public class Master {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+
+		}
+	}
+
+	/**
+	 * Upon receiving the confirmation that all maps are finished, start
+	 * reducing
+	 * 
+	 * @param jobId
+	 */
+	private void sendReduceTask(long jobId) {
+		MasterJob job = idToJob.get(jobId);
+		List<ReduceTask> tasks = job.getReducers();
+		for (ReduceTask task : tasks) {
+			WorkerInfo reducer = task.getReducer();
+			try {
+				Socket socket = new Socket(reducer.getIpAddress(),
+						reducer.getPort());
+				ObjectOutputStream out = new ObjectOutputStream(
+						socket.getOutputStream());
+				Message m = new Message();
+				m.setType(MessageType.REDUCE_REQ);
+				m.setJobId(task.getJobId());
+				m.setReduceTask(task);
+				out.writeObject(m);
+				socket.close();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 		}

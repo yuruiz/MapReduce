@@ -21,6 +21,7 @@ public class Message implements Serializable {
 	private MessageType type;
 	private MapTask mapTask;
 	private ReduceTask reduceTask;
+	// the job id
 	private long jobId;
 	private WorkerInfo receiver;
 

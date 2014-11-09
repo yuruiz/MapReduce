@@ -3,6 +3,7 @@ package worker;
 import task.MapperThread;
 import task.ReducerThread;
 import util.Config;
+import util.FileTransmission;
 import util.Message;
 
 import java.io.IOException;
@@ -14,8 +15,8 @@ import java.util.ArrayList;
 
 public class Worker {
 
-	WorkerInfo info;
-    ArrayList<String> filelist;
+	private WorkerInfo info;
+    private ArrayList<String> filelist;
 
 	public Worker() {
 
@@ -39,7 +40,8 @@ public class Worker {
 
 		Socket socket;
 		try {
-			while ((socket = listenSocket.accept()) != null) {
+            FileTransmission transmission;
+            while ((socket = listenSocket.accept()) != null) {
 
 				ObjectInputStream input = new ObjectInputStream(
 						socket.getInputStream());
@@ -48,20 +50,50 @@ public class Worker {
 				switch (mesg.getType()) {
 				case MAP_REQ:
 
-                    MapperThread mt = new MapperThread(mesg.getMapTask());
+                    MapperThread mt = new MapperThread(mesg.getMapTask(), this);
 
                     mt.start();
                     break;
 				case REDUCE_REQ:
 
-                    ReducerThread rt = new ReducerThread(mesg.getReduceTask());
+                    ReducerThread rt = new ReducerThread(mesg.getReduceTask(), this);
 
                     rt.start();
                     break;
 				case FILE_FETCH:
+                    long jobID = mesg.getJobId();
+                    int WorkerID = mesg.getFetchworkerInfo().getId();
+                    String filename = null;
+
+                    String start = "Job_" + jobID;
+                    String end = "ForReducer_" + WorkerID;
+                    for (String tempfilename : filelist) {
+                        if (tempfilename.startsWith(start) && tempfilename.endsWith(end)) {
+                            filename = tempfilename;
+                            break;
+                        }
+                    }
+
+                    if (filename == null) {
+                        //todo send file not found
+                    }
+
+                     transmission = new FileTransmission(filename, socket.getOutputStream());
+
+                    transmission.start();
 
 					break;
                 case FILE_REQ:
+                    String fetch_name = mesg.getFetcheFilename();
+
+                    if (!filelist.contains(fetch_name)) {
+                        //todo send file not found
+                        break;
+                    }
+
+                     transmission = new FileTransmission(fetch_name, socket.getOutputStream());
+
+                    transmission.start();
                     break;
 				default:
 					System.out.println("Error! Unknown Message Type received!");
@@ -90,6 +122,23 @@ public class Worker {
 			e.printStackTrace();
 		}
 	}
+
+    public void addfiletolist(String filename) {
+        synchronized(filelist){
+            if(!filelist.contains(filename)) {
+                filelist.add(filename);
+            }
+        }
+
+    }
+
+    public void removefilefromlist(String filename) {
+        synchronized(filelist) {
+            if (filelist.contains(filename)) {
+                filelist.remove(filename);
+            }
+        }
+    }
 
 	public static void main(String[] args) {
 		if (args.length != 2) {

@@ -1,6 +1,7 @@
 package task;
 
 import util.*;
+import worker.Worker;
 import worker.WorkerInfo;
 
 import java.io.File;
@@ -10,16 +11,18 @@ import java.util.List;
 
 public class MapperThread extends Thread{
 
+    private Worker worker;
     private MapTask task;
     private long jobID;
     private int taskID;
     private List<WorkerInfo> infos;
 
-    public MapperThread(MapTask task) {
+    public MapperThread(MapTask task, Worker worker) {
         this.task = task;
         this.jobID = task.getJobId();
         this.taskID = task.getTaskId();
         this.infos = task.getReducers();
+        this.worker = worker;
     }
 
     public void run() {
@@ -34,7 +37,7 @@ public class MapperThread extends Thread{
 
             if (!file.exists()) {
                 System.out.println("File " + fileName + " not exist");
-                FileTransmission.askforfile(fileName, p.getOwners());
+                FileTransmission.askforfile(fileName, p.getOwners(), worker);
 
                 file = new File(fileName);
 
@@ -94,6 +97,8 @@ public class MapperThread extends Thread{
             FileWriter outputfile = new FileWriter(outputName);
 
             outputfile.write(templist);
+
+            worker.addfiletolist(outputName);
 
         }
     }

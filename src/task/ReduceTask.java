@@ -19,6 +19,9 @@ public class ReduceTask implements Serializable {
 	private long jobId;
 	private int taskId;
 	private MapReduceMethod job;
+	// the id of the worker who is executing the reduce task, upon a reducer
+	// failure, another worker may take his job by taking the failed node's id
+	private int workerId;
 
 	public List<WorkerInfo> getMappers() {
 		return mappers;
@@ -58,6 +61,14 @@ public class ReduceTask implements Serializable {
 
 	public void setJob(MapReduceMethod job) {
 		this.job = job;
+	}
+
+	public int getWorkerId() {
+		return workerId;
+	}
+
+	public void setWorkerId(int workerId) {
+		this.workerId = workerId;
 	}
 
 }

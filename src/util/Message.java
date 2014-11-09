@@ -21,8 +21,9 @@ public class Message implements Serializable {
 	private MessageType type;
 	private MapTask mapTask;
 	private ReduceTask reduceTask;
-    private String fetcheFilename;
-    private WorkerInfo fetchworkerInfo;
+	private String fetcheFilename;
+	private WorkerInfo fetchworkerInfo;
+	// the job id
 	private long jobId;
 	private WorkerInfo receiver;
 
@@ -58,21 +59,21 @@ public class Message implements Serializable {
 		this.jobId = jobId;
 	}
 
-    public void setFetcheFilename(String filename) {
-        this.fetcheFilename = filename;
-    }
+	public void setFetcheFilename(String filename) {
+		this.fetcheFilename = filename;
+	}
 
-    public String getFetcheFilename() {
-        return this.fetcheFilename;
-    }
+	public String getFetcheFilename() {
+		return this.fetcheFilename;
+	}
 
-    public void setFetchworkerInfo(WorkerInfo info) {
-        this.fetchworkerInfo = info;
-    }
+	public void setFetchworkerInfo(WorkerInfo info) {
+		this.fetchworkerInfo = info;
+	}
 
-    public WorkerInfo getFetchworkerInfo() {
-        return fetchworkerInfo;
-    }
+	public WorkerInfo getFetchworkerInfo() {
+		return fetchworkerInfo;
+	}
 
 	public WorkerInfo getReceiver() {
 		return receiver;

@@ -25,7 +25,7 @@ import util.Message;
 import util.Message.MessageType;
 import util.Partition;
 
-public class Master {
+public class Master implements Runnable {
 
 	private MasterHeartBeat hearBeat;
 	private List<MasterJob> runningJobs;
@@ -77,6 +77,10 @@ public class Master {
 		w.setReduceTasks(new ArrayList<ReduceTask>());
 		this.handleReduceFailure(failedReduce);
 
+	}
+
+	public void shutDown() {
+		this.shutDown = true;
 	}
 
 	/**
@@ -152,7 +156,7 @@ public class Master {
 		failedWorkers.remove(recovered);
 	}
 
-	public void poll() {
+	public void run() {
 		try {
 			ServerSocket server = new ServerSocket(port);
 			while (!shutDown) {
@@ -218,26 +222,11 @@ public class Master {
 	/**
 	 * 
 	 */
-	public void start() {
-		try {
-			ServerSocket server = new ServerSocket(port);
-			while (true) {
-				Socket client = server.accept();
-				ObjectOutputStream out = new ObjectOutputStream(
-						client.getOutputStream());
-				ObjectInputStream in = new ObjectInputStream(
-						client.getInputStream());
-				ClientJob job = (ClientJob) in.readObject();
-				ServiceHandler handler = new ServiceHandler(job, client, out);
-				new Thread(handler).start();
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void newJob(ClientJob job) {
+
+		ServiceHandler handler = new ServiceHandler(job);
+		new Thread(handler).start();
+
 	}
 
 	/**
@@ -251,19 +240,17 @@ public class Master {
 	private class ServiceHandler implements Runnable {
 
 		private ClientJob job;
-		private Socket client;
-		private ObjectOutputStream out;
 
-		public ServiceHandler(ClientJob job, Socket client,
-				ObjectOutputStream out) {
+		public ServiceHandler(ClientJob job) {
 			this.job = job;
-			this.client = client;
-			this.out = out;
+
 		}
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
+			List<Partition> allPartitions = new ArrayList<Partition>();
+			int load = divideData(allPartitions, job);
+			assignMapTask(allPartitions, job, load);
 
 		}
 	}
@@ -414,7 +401,7 @@ public class Master {
 		}
 	}
 
-	public List<Partition> divideData(ClientJob job) {
+	public int divideData(List<Partition> list, ClientJob job) {
 		List<String> files = job.getfiles();
 		List<InputFile> data = new ArrayList<InputFile>();
 		int total = 0;
@@ -432,10 +419,30 @@ public class Master {
 		int expectedSize = total / workingWorkers.size();
 
 		for (InputFile file : data) {
+			int size = file.getLength();
+
+			// For a file smaller
+			if (size <= expectedSize) {
+				Partition p = new Partition();
+				p.setFileName(file.getFileName());
+				p.setOwners(file.getLocations());
+				p.setStartIndex(0);
+				p.setEndIndex(size - 1);
+				continue;
+			}
+
+			while (size > 0) {
+				Partition p = new Partition();
+				p.setFileName(file.getFileName());
+				p.setOwners(file.getLocations());
+				p.setEndIndex(size - 1);
+				p.setStartIndex(Math.max(0, size - expectedSize));
+				size -= expectedSize;
+			}
 
 		}
 
-		return null;
+		return expectedSize;
 
 	}
 

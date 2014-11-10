@@ -21,6 +21,7 @@ public class Worker {
 	public Worker() {
 
 	}
+	
 
 	public void start() {
 		this.info = Config.getWorkerInfo();

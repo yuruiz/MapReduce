@@ -21,7 +21,10 @@ public class Worker {
 	public Worker() {
 
 	}
-	
+
+	public WorkerInfo getInfo() {
+		return info;
+	}
 
 	public void start() {
 		this.info = Config.getWorkerInfo();

@@ -23,7 +23,7 @@ public class WorkerHeartbeat extends Thread {
 
 		ServerSocket serverSocket = null;
 		try {
-			serverSocket = new ServerSocket(worker.info.getPollingPort());
+			serverSocket = new ServerSocket(worker.getInfo().getPollingPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

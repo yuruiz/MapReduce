@@ -13,8 +13,7 @@ public class Message implements Serializable {
      */
 
 	public enum MessageType {
-		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, WORKER_REG, RESEND, FILE_REQ, JOB_DONE, MAP_TASK_DONE,
-        REDUCE_TASK_DONE
+		MAP_REQ, MAP_RES, REDUCE_REQ, REDUCE_RES, FILE_FETCH, WORKER_REG, RESEND, FILE_REQ, JOB_DONE
 	}
 
 	private static final long serialVersionUID = 7264137218310503076L;
@@ -26,7 +25,6 @@ public class Message implements Serializable {
 	private WorkerInfo fetchworkerInfo;
 	// the job id
 	private long jobId;
-    private int taskId;
 	private WorkerInfo receiver;
 
 	public void setType(MessageType type) {

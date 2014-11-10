@@ -5,6 +5,9 @@ import worker.Worker;
 import worker.WorkerInfo;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,7 +63,19 @@ public class MapperThread extends Thread{
 
         shuffle(outputs);
 
-        //todo send maptask done message to master
+        try {
+            Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            Message mesg = new Message();
+            mesg.setType(Message.MessageType.MAP_RES);
+            mesg.setJobId(jobID);
+            mesg.setMapTask(task);
+            objectOutputStream.writeObject(mesg);
+            objectOutputStream.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void shuffle(List<KeyValuePair> outputs) {

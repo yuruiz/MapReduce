@@ -1,14 +1,20 @@
 package task;
 
+import util.Config;
 import util.FileTransmission;
 import util.KeyValuePair;
+import util.Message;
 import worker.Worker;
 import worker.WorkerInfo;
 
 import java.io.*;
-import java.util.*;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
-public class ReducerThread extends Thread{
+public class ReducerThread extends Thread {
 
     private ReduceTask task;
     private Worker worker;
@@ -28,7 +34,7 @@ public class ReducerThread extends Thread{
     }
 
     public void run() {
-        try{
+        try {
 
             inputs = FileTransmission.fetchfile(jobID, info, maperInfos);
 
@@ -51,11 +57,11 @@ public class ReducerThread extends Thread{
 
             for (Object key : keyArray) {
                 ArrayList<String> valueList = map.get(key);
-                KeyValuePair output = method.reduce((String)key, valueList);
+                KeyValuePair output = method.reduce((String) key, valueList);
                 outputs.add(output.getKey() + "\t" + output.getValue() + "\n");
             }
 
-            String outputfilename = "Job_"+jobID+"_Task_"+taskID+"_ReducerResult_"+info.getId();
+            String outputfilename = "Job_" + jobID + "_Task_" + taskID + "_ReducerResult_" + info.getId();
             FileOutputStream outputStream = new FileOutputStream(new File(outputfilename), false);
 
             for (int i = 0; i < outputs.size(); i++) {
@@ -64,7 +70,17 @@ public class ReducerThread extends Thread{
 
             outputStream.close();
 
-            //todo notify the master the reduce task finished
+
+            Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            Message mesg = new Message();
+            mesg.setType(Message.MessageType.REDUCE_RES);
+            mesg.setJobId(jobID);
+            mesg.setReduceTask(task);
+            objectOutputStream.writeObject(mesg);
+            objectOutputStream.close();
+            socket.close();
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

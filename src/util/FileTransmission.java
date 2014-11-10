@@ -1,11 +1,9 @@
 package util;
 
+import worker.Worker;
 import worker.WorkerInfo;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -16,7 +14,15 @@ import java.util.List;
 /**
  * Created by yuruiz on 11/8/14.
  */
-public class FileTransmission {
+public class FileTransmission extends Thread{
+
+    private String filename;
+    private OutputStream outputStream;
+
+    public FileTransmission(String filename, OutputStream outputStream) {
+        this.filename = filename;
+        this.outputStream = outputStream;
+    }
 
     public static byte[] inttobyte(int myInteger){
         return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(myInteger).array();
@@ -28,7 +34,7 @@ public class FileTransmission {
     }
 
 
-    public static void askforfile(String filename, List<WorkerInfo> infos) {
+    public static void askforfile(String filename, List<WorkerInfo> infos, Worker worker) {
 
         for (int i = 0; i < infos.size(); i++) {
             try {
@@ -62,6 +68,10 @@ public class FileTransmission {
                 }
 
                 output.close();
+                inputStream.close();
+                objectOutputStream.close();
+                socket.close();
+                worker.addfiletolist(filename);
                 break;
             } catch (UnknownHostException e) {
                 e.printStackTrace();
@@ -122,5 +132,30 @@ public class FileTransmission {
         }
 
         return retfilename;
+    }
+
+    public void run() {
+        try{
+            File file = new File(filename);
+            int length = (int)file.length();
+
+            outputStream.write(inttobyte(length));
+
+            FileInputStream inputStream = new FileInputStream(file);
+            byte[] buffer = new byte[4096];
+
+            int buffersize = 0;
+
+            while ((buffersize = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, buffersize);
+            }
+
+            inputStream.close();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }

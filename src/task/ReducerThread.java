@@ -2,6 +2,7 @@ package task;
 
 import util.FileTransmission;
 import util.KeyValuePair;
+import worker.Worker;
 import worker.WorkerInfo;
 
 import java.io.*;
@@ -9,19 +10,21 @@ import java.util.*;
 
 public class ReducerThread extends Thread{
 
-    ReduceTask task;
+    private ReduceTask task;
+    private Worker worker;
     private long jobID;
     private int taskID;
     private WorkerInfo info;
     private List<WorkerInfo> maperInfos;
     ArrayList<String> inputs;
 
-    public ReducerThread(ReduceTask task) {
+    public ReducerThread(ReduceTask task, Worker worker) {
         this.task = task;
         this.jobID = task.getJobId();
         this.taskID = task.getTaskId();
         this.info = task.getReducer();
         this.maperInfos = task.getMappers();
+        this.worker = worker;
     }
 
     public void run() {
@@ -32,6 +35,10 @@ public class ReducerThread extends Thread{
             if (inputs.size() != maperInfos.size()) {
                 System.out.println("Fetch files from mapper failed!");
                 return;
+            }
+
+            for (int i = 0; i < inputs.size(); i++) {
+                worker.addfiletolist(inputs.get(i));
             }
 
             HashMap<String, ArrayList<String>> map = buidmap();

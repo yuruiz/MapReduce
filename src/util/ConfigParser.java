@@ -16,13 +16,21 @@ public class ConfigParser {
 		this.fileName = fileName;
 	}
 
-	public int getMasterPort() {
-		return Integer.parseInt(this.findValue("MASTER_PORT"));
+	public int getNumValue(String key) {
+		return Integer.parseInt(this.findValue(key));
+	}
+
+	public WorkerInfo getMasterInfo() {
+		return getWorkers("MASTER").get(0);
 	}
 
 	public List<WorkerInfo> getWorkers() {
+		return getWorkers("WORKER");
+	}
+
+	private List<WorkerInfo> getWorkers(String key) {
 		List<WorkerInfo> workers = new ArrayList<WorkerInfo>();
-		String line = this.findValue("WORKER");
+		String line = this.findValue(key);
 		String[] ips = line.split("[,]");
 		for (String s : ips) {
 			String[] ipPort = s.split("[:]");
@@ -36,10 +44,6 @@ public class ConfigParser {
 
 		return workers;
 
-	}
-
-	public int getTimeOut() {
-		return Integer.parseInt((this.findValue("TIME_OUT")));
 	}
 
 	private String findValue(String key) {

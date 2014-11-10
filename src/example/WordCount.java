@@ -28,9 +28,12 @@ public class WordCount implements ClientJob {
 	}
 
 	@Override
-	public KeyValuePair reduce(String key, ArrayList<String> values) {
-		// TODO Auto-generated method stub
-		return null;
+	public KeyValuePair reduce(String key, List<String> values) {
+		int sum = 0;
+		for (String s : values) {
+			sum += Integer.parseInt(s);
+		}
+		return new KeyValuePair(key, String.valueOf(sum));
 	}
 
 	@Override

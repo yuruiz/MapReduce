@@ -16,6 +16,6 @@ public interface MapReduceMethod extends Serializable {
 	 */
 	public List<KeyValuePair> map(String key, String value);
 
-	public KeyValuePair reduce(String key, ArrayList<String> values);
+	public KeyValuePair reduce(String key, List<String> values);
 
 }

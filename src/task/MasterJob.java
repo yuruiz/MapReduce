@@ -13,11 +13,36 @@ public class MasterJob {
 	private Set<Partition> partitions;
 	private MapReduceMethod job;
 	private long id;
+	private int finishedMaps;
+	private int finishedReduces;
 
 	public MasterJob() {
 		mappers = new ArrayList<MapTask>();
 		reducers = new ArrayList<ReduceTask>();
 		partitions = new HashSet<Partition>();
+		finishedMaps = 0;
+		finishedReduces = 0;
+	}
+
+	public void finishMapTask(MapTask map) {
+		if (mappers.contains(map) && !map.isFinished()) {
+			finishedMaps++;
+			map.setFinished(true);
+		}
+	}
+
+	public boolean allMapFinished() {
+		return finishedMaps == mappers.size();
+	}
+
+	public boolean allReduceFinished() {
+		return finishedReduces == reducers.size();
+	}
+
+	public void finishReduceTask(ReduceTask reduce) {
+		if (reducers.contains(reduce)) {
+			finishedReduces++;
+		}
 	}
 
 	public List<MapTask> getMappers() {

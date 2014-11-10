@@ -152,7 +152,7 @@ public class Master {
 		failedWorkers.remove(recovered);
 	}
 
-	public void handleMessage() {
+	public void poll() {
 		try {
 			ServerSocket server = new ServerSocket(port);
 			while (!shutDown) {
@@ -162,10 +162,9 @@ public class Master {
 				ObjectInputStream in = new ObjectInputStream(
 						worker.getInputStream());
 				Message m = (Message) in.readObject();
-				switch (m.getType()) {
-				case MAP_RES:
-					
-				}
+				new Thread(new MessageHandler(m)).start();
+				out.close();
+				server.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -174,6 +173,46 @@ public class Master {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private void handleMessage(Message m) {
+		MasterJob job;
+		switch (m.getType()) {
+		case MAP_RES:
+			MapTask map = m.getMapTask();
+			job = idToJob.get(map.getJobId());
+			job.finishMapTask(map);
+			if (job.allMapFinished()) {
+				this.sendReduceTask(job);
+			}
+			break;
+		case REDUCE_RES:
+			ReduceTask reduce = m.getReduceTask();
+			job = idToJob.get(reduce.getJobId());
+			job.finishReduceTask(reduce);
+			if (job.allMapFinished() && job.allReduceFinished()) {
+				runningJobs.remove(job);
+			}
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	private class MessageHandler implements Runnable {
+
+		private Message m;
+
+		public MessageHandler(Message m) {
+			this.m = m;
+		}
+
+		@Override
+		public void run() {
+			handleMessage(m);
+		}
+
 	}
 
 	/**
@@ -330,8 +369,7 @@ public class Master {
 	 * 
 	 * @param jobId
 	 */
-	private void sendReduceTask(long jobId) {
-		MasterJob job = idToJob.get(jobId);
+	private void sendReduceTask(MasterJob job) {
 		List<ReduceTask> tasks = job.getReducers();
 		for (ReduceTask task : tasks) {
 			WorkerInfo reducer = task.getReducer();

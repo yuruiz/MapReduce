@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class Worker {
 
 	WorkerInfo info;
-    ArrayList<String> filelist;
+	ArrayList<String> filelist;
 
 	public Worker() {
 
@@ -48,21 +48,21 @@ public class Worker {
 				switch (mesg.getType()) {
 				case MAP_REQ:
 
-                    MapperThread mt = new MapperThread(mesg.getMapTask());
+					MapperThread mt = new MapperThread(mesg.getMapTask());
 
-                    mt.start();
-                    break;
+					mt.start();
+					break;
 				case REDUCE_REQ:
 
-                    ReducerThread rt = new ReducerThread(mesg.getReduceTask());
+					ReducerThread rt = new ReducerThread(mesg.getReduceTask());
 
-                    rt.start();
-                    break;
+					rt.start();
+					break;
 				case FILE_FETCH:
 
 					break;
-                case FILE_REQ:
-                    break;
+				case FILE_REQ:
+					break;
 				default:
 					System.out.println("Error! Unknown Message Type received!");
 					break;

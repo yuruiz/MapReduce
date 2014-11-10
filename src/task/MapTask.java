@@ -16,7 +16,7 @@ public class MapTask implements Serializable {
 	private int taskId;
 	private int load;
 	private MapReduceMethod method;
-    boolean finished = false;
+	private boolean finished = false;
 
 	private WorkerInfo worker;
 	private List<WorkerInfo> reducers;
@@ -98,5 +98,13 @@ public class MapTask implements Serializable {
 
 	public void setMethod(MapReduceMethod method) {
 		this.method = method;
+	}
+
+	public boolean isFinished() {
+		return finished;
+	}
+
+	public void setFinished(boolean finished) {
+		this.finished = finished;
 	}
 }

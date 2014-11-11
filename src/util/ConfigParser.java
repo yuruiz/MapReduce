@@ -32,13 +32,16 @@ public class ConfigParser {
 		List<WorkerInfo> workers = new ArrayList<WorkerInfo>();
 		String line = this.findValue(key);
 		String[] ips = line.split("[,]");
+		int i = 0;
 		for (String s : ips) {
 			String[] ipPort = s.split("[:]");
 			if (ipPort.length < 3) {
 				continue;
 			}
-			WorkerInfo w = new WorkerInfo(ipPort[0],
+			WorkerInfo w = new WorkerInfo(ipPort[0].trim(),
 					Integer.parseInt(ipPort[1]), Integer.parseInt(ipPort[2]));
+			w.setId(i);
+			i++;
 			workers.add(w);
 		}
 

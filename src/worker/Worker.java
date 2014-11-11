@@ -51,6 +51,8 @@ public class Worker {
 		try {
 			FileTransmission transmission;
 			System.out.println("Worker Starting");
+			System.out.println("Address: " + info.getIpAddress() + ":"
+					+ info.getPort());
 			while ((socket = listenSocket.accept()) != null) {
 
 				ObjectInputStream input = new ObjectInputStream(
@@ -92,8 +94,8 @@ public class Worker {
 						// todo send file not found
 					}
 
-					transmission = new FileTransmission(Config.DataDirectory + "/" + filename,
-							socket.getOutputStream());
+					transmission = new FileTransmission(Config.DataDirectory
+							+ "/" + filename, socket.getOutputStream());
 
 					transmission.start();
 

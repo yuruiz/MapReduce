@@ -50,7 +50,7 @@ public class MasterCommandUI {
 					master.newJob(job);
 
 				} catch (ClassNotFoundException | InstantiationException
-						| IllegalAccessException e) {
+						| IllegalAccessException | NoClassDefFoundError e) {
 					System.out.println("Unrecognized job name");
 					continue;
 				}

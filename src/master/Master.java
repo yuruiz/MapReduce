@@ -21,6 +21,7 @@ import task.MasterJob;
 import task.ReduceTask;
 import util.Config;
 import util.InputFile;
+import util.Log;
 import util.Message;
 import util.Message.MessageType;
 import util.Partition;
@@ -160,8 +161,10 @@ public class Master implements Runnable {
 		failedWorkers.remove(recovered);
 	}
 
+	@Override
 	public void run() {
 		try {
+			new Thread(hearBeat).start();
 			ServerSocket server = new ServerSocket(port);
 			while (!shutDown) {
 				Socket worker = server.accept();
@@ -294,6 +297,7 @@ public class Master implements Runnable {
 
 		List<WorkerInfo> reducers = this.getIdleWorkers(job.getMaxReduceFile());
 
+		Log.log(workingWorkers.size());
 		synchronized (workingWorkers) {
 
 			long jobId = System.currentTimeMillis();
@@ -348,16 +352,16 @@ public class Master implements Runnable {
 					}
 					Partition p = partitions.get(i);
 					task.addPartition(p);
-					System.out.println(p.getLength());
+					// System.out.println(p.getLength());
 					task.increaseLoad(p.getLength());
 					i++;
 
 				}
 
-				System.out.println("send");
-				if (task.getPartitions().size() < 1) {
-					continue;
-				}
+				System.out.println("send map Task: " + task.getTaskId());
+				Log.log("IP: " + task.getWorker().getIpAddress() + " port: "
+						+ task.getWorker().getPort() + " size: "
+						+ task.getPartitions().size());
 
 				/*
 				 * Send the map task to workers for execution
@@ -379,6 +383,9 @@ public class Master implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+
+				Log.log("MapTask sent: " + task.getTaskId());
+
 			}
 
 		}
@@ -395,6 +402,8 @@ public class Master implements Runnable {
 		for (ReduceTask task : tasks) {
 			WorkerInfo reducer = task.getReducer();
 			try {
+				Log.log("send reduce: " + task.getTaskId() + " "
+						+ reducer.getIpAddress() + " " + reducer.getPort());
 				Socket socket = new Socket(reducer.getIpAddress(),
 						reducer.getPort());
 				ObjectOutputStream out = new ObjectOutputStream(
@@ -452,6 +461,7 @@ public class Master implements Runnable {
 		}
 
 		int expectedSize = total / workingWorkers.size();
+		Log.log("total: " + total + "average: " + expectedSize);
 
 		for (InputFile file : data) {
 			int size = file.getLength();
@@ -479,7 +489,7 @@ public class Master implements Runnable {
 
 		}
 
-		System.out.println(list.size());
+		System.out.println("num of partitions: " + list.size());
 
 		return expectedSize;
 

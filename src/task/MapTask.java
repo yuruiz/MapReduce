@@ -58,7 +58,7 @@ public class MapTask implements Serializable {
 	}
 
 	public void increaseLoad(int load) {
-		this.load = load;
+		this.load += load;
 	}
 
 	public List<WorkerInfo> getReducers() {

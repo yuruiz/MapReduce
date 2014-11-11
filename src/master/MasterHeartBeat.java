@@ -49,6 +49,7 @@ public class MasterHeartBeat implements Runnable {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			} catch (TimeoutException e) {
+				e.printStackTrace();
 				master.removeWorker(worker);
 			}
 		}

@@ -60,7 +60,7 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public int getMaxReduceFile() {
-		return 1;
+		return 2;
 	}
 
 	@Override

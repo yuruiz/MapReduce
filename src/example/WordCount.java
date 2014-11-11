@@ -21,8 +21,9 @@ public class WordCount implements ClientJob {
 
 		List<KeyValuePair> list = new ArrayList<KeyValuePair>();
 
-		String[] words = value.split(" ");
+		String[] words = value.split("\\W+");
 		for (String word : words) {
+			word = word.toLowerCase();
 			KeyValuePair pair = new KeyValuePair(word, "1");
 			list.add(pair);
 		}

@@ -94,6 +94,6 @@ public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 			return false;
 		}
 		WorkerInfo w = (WorkerInfo) o;
-		return w.ipAddress.equals(this.ipAddress);
+		return w.ipAddress.equals(this.ipAddress) && w.getPort() == this.port;
 	}
 }

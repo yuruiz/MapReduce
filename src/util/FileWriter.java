@@ -20,10 +20,8 @@ public class FileWriter {
         try {
             FileOutputStream outputStream = new FileOutputStream(new File(filename), false);
 
-            for (int i = 0; i < recordlist.size(); i++) {
-                KeyValuePair tempPair = recordlist.get(i);
+            for (KeyValuePair tempPair: recordlist) {
                 String linebuf = tempPair.getKey() + "\t" + tempPair.getValue() + "\n";
-
                 outputStream.write(linebuf.getBytes());
             }
 

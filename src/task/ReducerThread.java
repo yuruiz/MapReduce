@@ -84,6 +84,8 @@ public class ReducerThread extends Thread {
             objectOutputStream.close();
             socket.close();
 
+            System.out.println("Reducer task " + taskID + " now finished");
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -94,12 +96,11 @@ public class ReducerThread extends Thread {
     private HashMap<String, ArrayList<String>> buidmap() {
         HashMap<String, ArrayList<String>> map = null;
         try {
-            int fileCount = inputs.size();
             map = new HashMap<String, ArrayList<String>>();
 
-            for (int i = 0; i < fileCount; i++) {
+            for (String filename: inputs) {
                 String linebuf;
-                BufferedReader reader = new BufferedReader(new FileReader(Config.DataDirectory + "/" + inputs.get(i)));
+                BufferedReader reader = new BufferedReader(new FileReader(Config.DataDirectory + "/" + filename));
 
                 while ((linebuf = reader.readLine()) != null) {
                     String[] kvPair = linebuf.split("\t");
@@ -108,7 +109,7 @@ public class ReducerThread extends Thread {
                     if (map.containsKey(kvPair[0])) {
                         valueList = map.get(kvPair[0]);
                     } else {
-                        valueList = new ArrayList<String>();
+                        valueList = new ArrayList<>();
                         map.put(kvPair[0], valueList);
                     }
 

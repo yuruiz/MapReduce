@@ -59,7 +59,7 @@ public class MapperThread extends Thread {
 					p.getLength());
 
 			for (int j = 0; j < input.length; j++) {
-				//System.out.println(input[j][1]);
+//				System.out.println(input[j][1]);
 				List<KeyValuePair> temp = method.map(input[j][0], input[j][1]);
 				if (temp != null) {
 					outputs.addAll(temp);
@@ -67,7 +67,11 @@ public class MapperThread extends Thread {
 			}
 		}
 
+        System.out.println("Start shuffling");
+
 		shuffle(outputs);
+
+        System.out.println("Finish shuffling");
 
 		try {
 			Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
@@ -83,10 +87,15 @@ public class MapperThread extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+        System.out.println("Map task " + taskID + " is now finished");
+
 	}
 
 	private void shuffle(List<KeyValuePair> outputs) {
 		int reduceNum = task.getReducers().size();
+
+        System.out.println("Reducer number is " + reduceNum);
 
 		HashMap<Integer, List<KeyValuePair>> map = new HashMap<Integer, List<KeyValuePair>>(
 				reduceNum);
@@ -96,11 +105,13 @@ public class MapperThread extends Thread {
 			map.put(i, list);
 		}
 
-		for (int i = 0; i < outputs.size(); i++) {
-			KeyValuePair record;
-			String key;
-			record = outputs.get(i);
-			key = record.getKey();
+        System.out.println("Finish reducer mapper creating");
+
+        System.out.println("Start distribution records, record number " + outputs.size());
+
+//        int a = 0;
+		for (KeyValuePair record: outputs) {
+            String key = record.getKey();
 			int tempKey;
 			if (key.length() > 0)
 				tempKey = key.charAt(0) % reduceNum;
@@ -108,7 +119,11 @@ public class MapperThread extends Thread {
 				tempKey = 0;
 
 			map.get(tempKey).add(record);
+
+//            System.out.println(a++);
 		}
+
+        System.out.println("Start writing records to file");
 
 		for (int i = 0; i < reduceNum; i++) {
 			List<KeyValuePair> templist = map.get(i);
@@ -123,6 +138,9 @@ public class MapperThread extends Thread {
 
 			worker.addfiletolist(outputName);
 
-		}
+            System.out.println("Writing to file" + outputName + "success");
+
+
+        }
 	}
 }

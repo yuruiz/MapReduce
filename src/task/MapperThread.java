@@ -59,7 +59,6 @@ public class MapperThread extends Thread {
 					p.getLength());
 
 			for (int j = 0; j < input.length; j++) {
-//				System.out.println(input[j][1]);
 				List<KeyValuePair> temp = method.map(input[j][0], input[j][1]);
 				if (temp != null) {
 					outputs.addAll(temp);
@@ -109,7 +108,6 @@ public class MapperThread extends Thread {
 
         System.out.println("Start distribution records, record number " + outputs.size());
 
-//        int a = 0;
 		for (KeyValuePair record: outputs) {
             String key = record.getKey();
 			int tempKey;
@@ -120,7 +118,6 @@ public class MapperThread extends Thread {
 
 			map.get(tempKey).add(record);
 
-//            System.out.println(a++);
 		}
 
         System.out.println("Start writing records to file");

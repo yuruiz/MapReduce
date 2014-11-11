@@ -11,12 +11,13 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Worker {
 
 	private WorkerInfo info;
-	private ArrayList<String> fileList;
-	private ArrayList<InputFile> inputs;
+	private List<String> fileList;
+	private List<InputFile> inputs;
 
 	public Worker() {
 		fileList = new ArrayList<String>();
@@ -182,6 +183,10 @@ public class Worker {
 			}
 		}
 	}
+
+    public List<String> getfileList() {
+        return fileList;
+    }
 
 	public int countLines(String filename) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(filename));

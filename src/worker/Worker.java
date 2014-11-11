@@ -4,11 +4,10 @@ import task.MapperThread;
 import task.ReducerThread;
 import util.Config;
 import util.FileTransmission;
+import util.InputFile;
 import util.Message;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -17,6 +16,7 @@ public class Worker {
 
 	private WorkerInfo info;
 	private ArrayList<String> filelist;
+    private ArrayList<InputFile> inputs;
 
 	public Worker() {
 
@@ -26,10 +26,11 @@ public class Worker {
 		return info;
 	}
 
-	public void start() {
+	public void start() throws Exception{
 		this.info = Config.getWorkerInfo();
 		WorkerHeartbeat heartbeat = new WorkerHeartbeat(this);
 		heartbeat.start();
+        DFSbootstrap();
 
 		register();
 
@@ -60,8 +61,7 @@ public class Worker {
 					break;
 				case REDUCE_REQ:
 
-					ReducerThread rt = new ReducerThread(mesg.getReduceTask(),
-							this);
+					ReducerThread rt = new ReducerThread(mesg.getReduceTask(), this);
 
 					rt.start();
 					break;
@@ -124,6 +124,8 @@ public class Worker {
 					socket.getOutputStream());
 			Message mesg = new Message();
 			mesg.setType(Message.MessageType.WORKER_REG);
+            mesg.setReceiver(this.info);
+            mesg.setInputs(inputs);
 			out.writeObject(mesg);
 			out.close();
 			socket.close();
@@ -131,6 +133,25 @@ public class Worker {
 			e.printStackTrace();
 		}
 	}
+
+    private void DFSbootstrap() throws Exception{
+        File dir = new File(Config.DataDirectory);
+
+        if (!dir.exists()) {
+            throw new IOException("The Working directory" + Config.DataDirectory + "not exits");
+        }
+
+        File[] files = dir.listFiles();
+
+        for (File file : files) {
+            String filename = file.getName();
+            addfiletolist(filename);
+            int length = countLines(filename);
+            InputFile inputFile = new InputFile(filename, null, length);
+            inputs.add(inputFile);
+        }
+
+    }
 
 	public void addfiletolist(String filename) {
 		synchronized (filelist) {
@@ -149,12 +170,25 @@ public class Worker {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 
 		Config.setup(args);
 
 		Worker worker = new Worker();
 		worker.start();
 	}
+
+    public  int countLines(String filename) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        int length = 0;
+        try {
+            while (reader.readLine() != null) {
+                length++;
+            }
+            return length;
+        } finally {
+            reader.close();
+        }
+    }
 
 }

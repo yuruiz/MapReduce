@@ -22,31 +22,14 @@ public class DFSManager {
 		return data.get(fileName);
 	}
 
-	public void addFile(String fileName, WorkerInfo worker) {
+	public void addFile(String fileName, WorkerInfo worker, int length) {
 		if (data.get(fileName) == null) {
 			List<WorkerInfo> list = new ArrayList<WorkerInfo>();
 			list.add(worker);
-			data.put(fileName,
-					new InputFile(fileName, list, this.getLength(fileName)));
+			data.put(fileName, new InputFile(fileName, list, length));
 		} else {
 			data.get(fileName).addLocation(worker);
 		}
-	}
-
-	private int getLength(String file) {
-
-		int length = 0;
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			while (reader.readLine() != null) {
-				length++;
-			}
-			reader.close();
-		} catch (IOException e) {
-			return -1;
-		}
-
-		return length;
 	}
 
 }

@@ -203,7 +203,12 @@ public class Master implements Runnable {
 			break;
 		case WORKER_REG:
 			WorkerInfo newWorker = m.getReceiver();
-			
+			workers.add(newWorker);
+			workingWorkers.add(newWorker);
+			List<InputFile> inputFiles = m.getInputs();
+			for (InputFile f : inputFiles) {
+				manager.addFile(f.getFileName(), newWorker, f.getLength());
+			}
 			break;
 		default:
 			break;

@@ -11,48 +11,47 @@ import java.util.Scanner;
 
 public class WorkerHeartbeat extends Thread {
 
-	private Worker worker;
+    private Worker worker;
 
-	public WorkerHeartbeat(Worker worker) {
-		this.worker = worker;
-	}
+    public WorkerHeartbeat(Worker worker) {
+        this.worker = worker;
+    }
 
-	@Override
-	public void run() {
+    @Override
+    public void run() {
 
-		ServerSocket serverSocket = null;
-		try {
-			serverSocket = new ServerSocket(worker.getInfo().getPollingPort());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(worker.getInfo().getPollingPort());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-		assert serverSocket != null;
+        assert serverSocket != null;
 
-		while (true) {
-			try {
+        Socket socket;
+        try {
 
-				Socket socket = serverSocket.accept();
+            while ((socket = serverSocket.accept()) != null) {
 
-				PrintWriter writer = new PrintWriter(socket.getOutputStream());
+                PrintWriter writer = new PrintWriter(socket.getOutputStream());
 
-				Scanner s = new Scanner(socket.getInputStream());
+                Scanner s = new Scanner(socket.getInputStream());
 
-				String response = s.nextLine();
+                String response = s.nextLine();
 
-				if (response.equals(Constant.HEART_BEAT_QUERY)) {
-					writer.println(Constant.HEART_BEAT_RESPONSE);
-				}
+                if (response.equals(Constant.HEART_BEAT_QUERY)) {
+                    writer.println(Constant.HEART_BEAT_RESPONSE);
+                }
 
-				s.close();
-				writer.close();
-				socket.close();
-
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+                s.close();
+                writer.close();
+                socket.close();
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

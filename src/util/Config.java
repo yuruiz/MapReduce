@@ -14,14 +14,12 @@ public class Config {
 	public static int SLEEP_TIME;
 
 	public static void setup(String[] args) {
-		if (args.length < 1) {
-			System.err.println("In correct arguments");
-			return;
-		}
 
 		ConfigParser p = new ConfigParser("Config.txt");
 
-		workerID = Integer.parseInt(args[0]);
+		if (args.length >= 1) {
+			workerID = Integer.parseInt(args[0]);
+		}
 		WorkerInfo master = p.getMasterInfo();
 		MASTER_IP = master.getIpAddress();
 		MASTER_PORT = master.getPort();

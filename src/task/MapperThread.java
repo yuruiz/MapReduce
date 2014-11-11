@@ -29,6 +29,7 @@ public class MapperThread extends Thread{
     }
 
     public void run() {
+        System.out.println("Map task " + taskID + " is now running");
         MapReduceMethod method = task.getMethod();
         List<Partition> filepartitions = task.getPartitions();
         List<KeyValuePair> outputs = new LinkedList<KeyValuePair>();

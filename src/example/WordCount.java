@@ -38,8 +38,10 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public List<String> getfiles() {
-		
-		return null;
+		List<String> files = new ArrayList<String>();
+		files.add("pg1.txt");
+		files.add("pg2.txt");
+		return files;
 	}
 
 	@Override

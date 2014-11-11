@@ -53,6 +53,7 @@ public class Master implements Runnable {
 		hearBeat.setMaster(this);
 		idToJob = new ConcurrentHashMap<Long, MasterJob>();
 		shutDown = false;
+		manager = new DFSManager();
 
 	}
 
@@ -173,6 +174,7 @@ public class Master implements Runnable {
 				out.close();
 
 			}
+			server.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -205,12 +207,13 @@ public class Master implements Runnable {
 			WorkerInfo newWorker = m.getReceiver();
 			workers.add(newWorker);
 			workingWorkers.add(newWorker);
+			newWorker.setMapTasks(new ArrayList<MapTask>());
+			newWorker.setReduceTasks(new ArrayList<ReduceTask>());
 			List<InputFile> inputFiles = m.getInputs();
 			if (inputFiles == null) {
 				break;
 			}
 			for (InputFile f : inputFiles) {
-				System.out.println(f.getFileName());
 				manager.addFile(f.getFileName(), newWorker, f.getLength());
 			}
 			break;

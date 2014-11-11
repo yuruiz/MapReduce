@@ -56,8 +56,6 @@ public class MasterCommandUI {
 				}
 			}
 
-			System.out.println("Unrecognized message");
-
 		}
 
 		s.close();

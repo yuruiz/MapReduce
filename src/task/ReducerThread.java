@@ -62,7 +62,8 @@ public class ReducerThread extends Thread {
             }
 
             String outputfilename = "Job_" + jobID + "_Task_" + taskID + "_ReducerResult_" + info.getId();
-            FileOutputStream outputStream = new FileOutputStream(new File(outputfilename), false);
+            FileOutputStream outputStream = new FileOutputStream(new File(Config.DataDirectory + "/" + outputfilename),
+                    false);
 
             for (int i = 0; i < outputs.size(); i++) {
                 outputStream.write(outputs.get(i).getBytes());

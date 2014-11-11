@@ -74,8 +74,7 @@ public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 	public void setMapTasks(List<MapTask> mapTasks) {
 		this.mapTasks = mapTasks;
 	}
-	
-	
+
 	public void setReduceTasks(List<ReduceTask> reduceTasks) {
 		this.reduceTasks = reduceTasks;
 	}
@@ -87,5 +86,14 @@ public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 	@Override
 	public int compareTo(WorkerInfo o) {
 		return this.numTasks() - o.numTasks();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof WorkerInfo)) {
+			return false;
+		}
+		WorkerInfo w = (WorkerInfo) o;
+		return w.ipAddress.equals(this.ipAddress);
 	}
 }

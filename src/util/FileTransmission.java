@@ -89,7 +89,7 @@ public class FileTransmission extends Thread{
         for (int i = 0; i < infos.size(); i++) {
             try {
                 WorkerInfo info = infos.get(i);
-
+                
                 Socket socket = new Socket(info.getIpAddress(), info.getPort());
 
                 InputStream inputStream = socket.getInputStream();

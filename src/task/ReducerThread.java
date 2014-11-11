@@ -99,7 +99,7 @@ public class ReducerThread extends Thread {
 
             for (int i = 0; i < fileCount; i++) {
                 String linebuf;
-                BufferedReader reader = new BufferedReader(new FileReader(inputs.get(i)));
+                BufferedReader reader = new BufferedReader(new FileReader(Config.DataDirectory + "/" + inputs.get(i)));
 
                 while ((linebuf = reader.readLine()) != null) {
                     String[] kvPair = linebuf.split("\t");

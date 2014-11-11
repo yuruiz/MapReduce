@@ -170,14 +170,6 @@ public class Worker {
 		}
 	}
 
-	public static void main(String[] args) throws Exception{
-
-		Config.setup(args);
-
-		Worker worker = new Worker();
-		worker.start();
-	}
-
     public  int countLines(String filename) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         int length = 0;
@@ -190,5 +182,17 @@ public class Worker {
             reader.close();
         }
     }
+
+	public static void main(String[] args) throws Exception{
+        if (args.length != 2) {
+            System.out.println("Usage: Worker <Data Direcotry> <Node index>");
+            return;
+        }
+
+		Config.setup(args);
+
+		Worker worker = new Worker();
+		worker.start();
+	}
 
 }

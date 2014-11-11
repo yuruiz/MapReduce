@@ -24,9 +24,6 @@ public class Config {
         }else if (args.length == 2) {
             DataDirectory = args[0];
             workerID = Integer.parseInt(args[1]);
-        }else{
-            System.out.println("Usage: Master <Working Directory>");
-            System.out.println("Usage: Master <Working Directory> <Node ID>");
         }
         WorkerInfo master = p.getMasterInfo();
 		MASTER_IP = master.getIpAddress();

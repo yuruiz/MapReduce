@@ -1,6 +1,5 @@
 package worker;
 
-import util.Config;
 import util.Constant;
 
 import java.io.IOException;
@@ -32,7 +31,6 @@ public class WorkerHeartbeat extends Thread {
 
 		while (true) {
 			try {
-				sleep(Config.HEART_BEAT_INTVAL);
 
 				Socket socket = serverSocket.accept();
 
@@ -50,8 +48,6 @@ public class WorkerHeartbeat extends Thread {
 				writer.close();
 				socket.close();
 
-			} catch (InterruptedException e) {
-				e.printStackTrace();
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

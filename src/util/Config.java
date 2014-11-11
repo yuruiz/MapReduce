@@ -4,7 +4,6 @@ import worker.WorkerInfo;
 
 public class Config {
     public static String MASTER_IP;
-    public static int HEART_BEAT_INTVAL;
     public static WorkerInfo info[];
     public static int workeriD;
     public static int MASTER_PORT;

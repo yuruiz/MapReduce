@@ -1,7 +1,10 @@
 package example;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import task.ClientJob;
 import util.KeyValuePair;
@@ -18,7 +21,7 @@ public class WordCount implements ClientJob {
 
 		List<KeyValuePair> list = new ArrayList<KeyValuePair>();
 
-		String[] words = key.split(" ");
+		String[] words = value.split(" ");
 		for (String word : words) {
 			KeyValuePair pair = new KeyValuePair(word, "1");
 			list.add(pair);
@@ -39,8 +42,18 @@ public class WordCount implements ClientJob {
 	@Override
 	public List<String> getfiles() {
 		List<String> files = new ArrayList<String>();
-		files.add("pg1.txt");
-		files.add("pg2.txt");
+		try {
+			Scanner s = new Scanner(new FileInputStream("data.txt"));
+			while (s.hasNextLine()) {
+				String file = s.nextLine();
+				files.add(file);
+			}
+			s.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		return files;
 	}
 

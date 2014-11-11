@@ -9,45 +9,44 @@ import java.io.RandomAccessFile;
  */
 public class FileReader {
 
-    private String fileName;
+	private String fileName;
 
+	public FileReader(String filename) {
+		this.fileName = filename;
+	}
 
-    public FileReader(String filename) {
-        this.fileName = filename;
-    }
+	public String[][] getKeyValuePairs(int index, int len) {
+		String[][] keyValuePairs = null;
+		try {
+			RandomAccessFile input = new RandomAccessFile(fileName, "r");
+			int recordcount = 0;
 
-    public String[][] getKeyValuePairs(int index, int len) {
-        String[][] keyValuePairs = null;
-        try {
-            RandomAccessFile input = new RandomAccessFile(fileName, "r");
-            int recordcount = 0;
+			while (recordcount < index) {
+				input.readLine();
+				recordcount++;
+			}
 
-            while (recordcount < index) {
-                input.readLine();
-                recordcount++;
-            }
+			keyValuePairs = new String[len][2];
 
-            keyValuePairs = new String[len][2];
+			for (int i = 0; i < len; i++) {
+				String linebuf = input.readLine();
+				// System.out.println(linebuf);
+				if (linebuf == null) {
+					break;
+				}
 
-            for (int i = 0; i < len; i++) {
-                String linebuf = input.readLine();
-                if (linebuf == null) {
-                    break;
-                }
+				keyValuePairs[i][0] = ((Integer) (recordcount + i)).toString();
+				keyValuePairs[i][1] = linebuf;
+			}
 
-                keyValuePairs[i][0] = ((Integer)(recordcount + i)).toString();
-                keyValuePairs[i][1] = linebuf;
-            }
+			input.close();
 
-            input.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return keyValuePairs;
-    }
+		return keyValuePairs;
+	}
 }

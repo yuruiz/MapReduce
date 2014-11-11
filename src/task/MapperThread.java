@@ -36,7 +36,8 @@ public class MapperThread extends Thread {
 		List<KeyValuePair> outputs = new LinkedList<KeyValuePair>();
 
 		for (int i = 0; i < filepartitions.size(); i++) {
-			String fileName = Config.DataDirectory + "/" + filepartitions.get(i).getFileName();
+			String fileName = Config.DataDirectory + "/"
+					+ filepartitions.get(i).getFileName();
 			Partition p = filepartitions.get(i);
 			File file = new File(fileName);
 
@@ -58,7 +59,8 @@ public class MapperThread extends Thread {
 					p.getLength());
 
 			for (int j = 0; j < input.length; j++) {
-				List<KeyValuePair> temp = method.map(input[i][0], input[i][1]);
+				//System.out.println(input[j][1]);
+				List<KeyValuePair> temp = method.map(input[j][0], input[j][1]);
 				if (temp != null) {
 					outputs.addAll(temp);
 				}

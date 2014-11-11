@@ -157,7 +157,7 @@ public class Worker {
 			String filename = file.getName();
 			System.out.println(" Get file " + filename);
 			addfiletolist(filename);
-			int length = countLines(filename);
+			int length = countLines(Config.DataDirectory + "/" + filename);
 			InputFile inputFile = new InputFile(filename, null, length);
 			inputs.add(inputFile);
 		}

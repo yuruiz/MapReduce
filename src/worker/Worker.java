@@ -92,7 +92,7 @@ public class Worker {
 						// todo send file not found
 					}
 
-					transmission = new FileTransmission(filename,
+					transmission = new FileTransmission(Config.DataDirectory + "/" + filename,
 							socket.getOutputStream());
 
 					transmission.start();

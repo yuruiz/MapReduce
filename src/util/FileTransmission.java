@@ -59,7 +59,7 @@ public class FileTransmission extends Thread{
 
                 int byteCount = 0;
 
-                FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
+                FileOutputStream output = new FileOutputStream(filename);
 
                 while (byteCount < filelen) {
                     int n = inputStream.read(buffer);

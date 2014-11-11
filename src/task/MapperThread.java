@@ -36,9 +36,9 @@ public class MapperThread extends Thread {
 		List<KeyValuePair> outputs = new LinkedList<KeyValuePair>();
 
 		for (int i = 0; i < filepartitions.size(); i++) {
-			String fileName = filepartitions.get(i).getFileName();
+			String fileName = Config.DataDirectory + "/" + filepartitions.get(i).getFileName();
 			Partition p = filepartitions.get(i);
-			File file = new File(Config.DataDirectory + "/" + fileName);
+			File file = new File(fileName);
 
 			if (!file.exists()) {
 				System.out.println("File " + fileName + " not exist");

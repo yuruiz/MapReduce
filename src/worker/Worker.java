@@ -35,6 +35,7 @@ public class Worker {
         System.out.println("Bootstrapping finished");
 
 		register();
+        System.out.println("Register to Master Success");
 
 		ServerSocket listenSocket = null;
 		try {
@@ -150,6 +151,7 @@ public class Worker {
 
         for (File file : files) {
             String filename = file.getName();
+            System.out.println(" Get file " + filename);
             addfiletolist(filename);
             int length = countLines(filename);
             InputFile inputFile = new InputFile(filename, null, length);

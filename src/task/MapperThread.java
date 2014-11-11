@@ -36,7 +36,7 @@ public class MapperThread extends Thread{
         for (int i = 0; i < filepartitions.size(); i++) {
             String fileName = filepartitions.get(i).getFileName();
             Partition p = filepartitions.get(i);
-            File file = new File(fileName);
+            File file = new File(Config.DataDirectory + "/" + fileName);
 
             if (!file.exists()) {
                 System.out.println("File " + fileName + " not exist");
@@ -109,7 +109,7 @@ public class MapperThread extends Thread{
 
             String outputName = "Job_"+jobID+"_Task_"+taskID+"_ForReducer_"+infos.get(i).getId();
 
-            FileWriter outputfile = new FileWriter(outputName);
+            FileWriter outputfile = new FileWriter(Config.DataDirectory + "/" + outputName);
 
             outputfile.write(templist);
 

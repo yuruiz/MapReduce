@@ -20,6 +20,8 @@ public class WorkerHeartbeat extends Thread {
     @Override
     public void run() {
 
+        System.out.println("Heart beat start");
+
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(worker.getInfo().getPollingPort());

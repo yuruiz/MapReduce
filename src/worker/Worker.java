@@ -30,7 +30,9 @@ public class Worker {
 		this.info = Config.getWorkerInfo();
 		WorkerHeartbeat heartbeat = new WorkerHeartbeat(this);
 		heartbeat.start();
+
         DFSbootstrap();
+        System.out.println("Bootstrapping finished");
 
 		register();
 
@@ -46,6 +48,7 @@ public class Worker {
 		Socket socket;
 		try {
 			FileTransmission transmission;
+            System.out.println("Worker Starting");
 			while ((socket = listenSocket.accept()) != null) {
 
 				ObjectInputStream input = new ObjectInputStream(
@@ -54,18 +57,19 @@ public class Worker {
 
 				switch (mesg.getType()) {
 				case MAP_REQ:
-
+                    System.out.println("Mapper Req received");
 					MapperThread mt = new MapperThread(mesg.getMapTask(), this);
 
 					mt.start();
 					break;
 				case REDUCE_REQ:
-
+                    System.out.println("Reducer Req received");
 					ReducerThread rt = new ReducerThread(mesg.getReduceTask(), this);
 
 					rt.start();
 					break;
 				case FILE_FETCH:
+                    System.out.println("File Fetch received");
 					long jobID = mesg.getJobId();
 					int WorkerID = mesg.getFetchworkerInfo().getId();
 					String filename = null;
@@ -92,6 +96,7 @@ public class Worker {
 					break;
 
 				case FILE_REQ:
+                    System.out.println("File request received");
 					String fetch_name = mesg.getFetcheFilename();
 
 					if (!filelist.contains(fetch_name)) {

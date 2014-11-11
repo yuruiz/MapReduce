@@ -169,9 +169,9 @@ public class Master implements Runnable {
 				ObjectInputStream in = new ObjectInputStream(
 						worker.getInputStream());
 				Message m = (Message) in.readObject();
-				new Thread(new MessageHandler(m)).start();
+				new Thread(new MessageHandler(m, worker)).start();
 				out.close();
-				server.close();
+
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -206,7 +206,11 @@ public class Master implements Runnable {
 			workers.add(newWorker);
 			workingWorkers.add(newWorker);
 			List<InputFile> inputFiles = m.getInputs();
+			if (inputFiles == null) {
+				break;
+			}
 			for (InputFile f : inputFiles) {
+				System.out.println(f.getFileName());
 				manager.addFile(f.getFileName(), newWorker, f.getLength());
 			}
 			break;
@@ -219,14 +223,22 @@ public class Master implements Runnable {
 	private class MessageHandler implements Runnable {
 
 		private Message m;
+		private Socket socket;
 
-		public MessageHandler(Message m) {
+		public MessageHandler(Message m, Socket socket) {
 			this.m = m;
+			this.socket = socket;
 		}
 
 		@Override
 		public void run() {
 			handleMessage(m);
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}

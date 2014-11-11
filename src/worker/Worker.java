@@ -15,22 +15,23 @@ import java.util.ArrayList;
 public class Worker {
 
 	private WorkerInfo info;
-	private ArrayList<String> filelist;
-    private ArrayList<InputFile> inputs;
+	private ArrayList<String> fileList;
+	private ArrayList<InputFile> inputs;
 
 	public Worker() {
-
+		fileList = new ArrayList<String>();
+		inputs = new ArrayList<InputFile>();
 	}
 
 	public WorkerInfo getInfo() {
 		return info;
 	}
 
-	public void start() throws Exception{
+	public void start() throws Exception {
 		this.info = Config.getWorkerInfo();
 		WorkerHeartbeat heartbeat = new WorkerHeartbeat(this);
 		heartbeat.start();
-        DFSbootstrap();
+		DFSbootstrap();
 
 		register();
 
@@ -61,7 +62,8 @@ public class Worker {
 					break;
 				case REDUCE_REQ:
 
-					ReducerThread rt = new ReducerThread(mesg.getReduceTask(), this);
+					ReducerThread rt = new ReducerThread(mesg.getReduceTask(),
+							this);
 
 					rt.start();
 					break;
@@ -72,7 +74,7 @@ public class Worker {
 
 					String start = "Job_" + jobID;
 					String end = "ForReducer_" + WorkerID;
-					for (String tempfilename : filelist) {
+					for (String tempfilename : fileList) {
 						if (tempfilename.startsWith(start)
 								&& tempfilename.endsWith(end)) {
 							filename = tempfilename;
@@ -94,7 +96,7 @@ public class Worker {
 				case FILE_REQ:
 					String fetch_name = mesg.getFetcheFilename();
 
-					if (!filelist.contains(fetch_name)) {
+					if (!fileList.contains(fetch_name)) {
 						// todo send file not found
 						break;
 					}
@@ -124,8 +126,8 @@ public class Worker {
 					socket.getOutputStream());
 			Message mesg = new Message();
 			mesg.setType(Message.MessageType.WORKER_REG);
-            mesg.setReceiver(this.info);
-            mesg.setInputs(inputs);
+			mesg.setReceiver(this.info);
+			mesg.setInputs(inputs);
 			out.writeObject(mesg);
 			out.close();
 			socket.close();
@@ -134,60 +136,61 @@ public class Worker {
 		}
 	}
 
-    private void DFSbootstrap() throws Exception{
-        File dir = new File(Config.DataDirectory);
+	private void DFSbootstrap() throws Exception {
+		File dir = new File(Config.DataDirectory);
 
-        if (!dir.exists()) {
-            throw new IOException("The Working directory" + Config.DataDirectory + "not exits");
-        }
+		if (!dir.exists()) {
+			throw new IOException("The Working directory"
+					+ Config.DataDirectory + "not exits");
+		}
 
-        File[] files = dir.listFiles();
+		File[] files = dir.listFiles();
 
-        for (File file : files) {
-            String filename = file.getName();
-            addfiletolist(filename);
-            int length = countLines(filename);
-            InputFile inputFile = new InputFile(filename, null, length);
-            inputs.add(inputFile);
-        }
+		for (File file : files) {
+			String filename = file.getName();
+			addfiletolist(filename);
+			int length = countLines(filename);
+			InputFile inputFile = new InputFile(filename, null, length);
+			inputs.add(inputFile);
+		}
 
-    }
+	}
 
 	public void addfiletolist(String filename) {
-		synchronized (filelist) {
-			if (!filelist.contains(filename)) {
-				filelist.add(filename);
+		synchronized (fileList) {
+			if (!fileList.contains(filename)) {
+				fileList.add(filename);
 			}
 		}
 
 	}
 
 	public void removefilefromlist(String filename) {
-		synchronized (filelist) {
-			if (filelist.contains(filename)) {
-				filelist.remove(filename);
+		synchronized (fileList) {
+			if (fileList.contains(filename)) {
+				fileList.remove(filename);
 			}
 		}
 	}
 
-    public  int countLines(String filename) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filename));
-        int length = 0;
-        try {
-            while (reader.readLine() != null) {
-                length++;
-            }
-            return length;
-        } finally {
-            reader.close();
-        }
-    }
+	public int countLines(String filename) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		int length = 0;
+		try {
+			while (reader.readLine() != null) {
+				length++;
+			}
+			return length;
+		} finally {
+			reader.close();
+		}
+	}
 
-	public static void main(String[] args) throws Exception{
-        if (args.length != 2) {
-            System.out.println("Usage: Worker <Data Direcotry> <Node index>");
-            return;
-        }
+	public static void main(String[] args) throws Exception {
+		if (args.length != 2) {
+			System.out.println("Usage: Worker <Data Direcotry> <Node index>");
+			return;
+		}
 
 		Config.setup(args);
 

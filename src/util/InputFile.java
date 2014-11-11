@@ -1,10 +1,15 @@
 package util;
 
+import java.io.Serializable;
 import java.util.List;
 
 import worker.WorkerInfo;
 
-public class InputFile {
+public class InputFile implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3905404058646869761L;
 	private String fileName;
 	private List<WorkerInfo> locations;
 	private int length;

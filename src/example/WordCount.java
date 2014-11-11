@@ -46,8 +46,7 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public int getMaxReduceFile() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 
 	@Override

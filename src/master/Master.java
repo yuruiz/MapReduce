@@ -326,7 +326,7 @@ public class Master implements Runnable {
 			 */
 			for (WorkerInfo worker : workingWorkers) {
 
-				MapTask t = new MapTask(masterJob.getId(), worker, load);
+				MapTask t = new MapTask(masterJob.getId(), worker, 0);
 				t.setTaskId(baseId);
 				t.setMethod(job);
 				baseId++;
@@ -340,16 +340,23 @@ public class Master implements Runnable {
 			 * Assign partitions to each map task
 			 */
 			int i = 0;
-			outer: for (MapTask task : masterJob.getMappers()) {
+			for (MapTask task : masterJob.getMappers()) {
 
-				while (task.getLoad() < load) {
+				while (task.getLoad() <= load) {
+					if (i >= partitions.size()) {
+						break;
+					}
 					Partition p = partitions.get(i);
 					task.addPartition(p);
+					System.out.println(p.getLength());
 					task.increaseLoad(p.getLength());
+					i++;
 
-					if (i >= partitions.size()) {
-						break outer;
-					}
+				}
+
+				System.out.println("send");
+				if (task.getPartitions().size() < 1) {
+					continue;
 				}
 
 				/*
@@ -438,6 +445,7 @@ public class Master implements Runnable {
 			if (input == null) {
 				// TODO Handle exception
 			} else {
+				System.out.println(input.getFileName());
 				data.add(input);
 				total += input.getLength();
 			}
@@ -455,6 +463,7 @@ public class Master implements Runnable {
 				p.setOwners(file.getLocations());
 				p.setStartIndex(0);
 				p.setEndIndex(size - 1);
+				list.add(p);
 				continue;
 			}
 
@@ -464,10 +473,13 @@ public class Master implements Runnable {
 				p.setOwners(file.getLocations());
 				p.setEndIndex(size - 1);
 				p.setStartIndex(Math.max(0, size - expectedSize));
+				list.add(p);
 				size -= expectedSize;
 			}
 
 		}
+
+		System.out.println(list.size());
 
 		return expectedSize;
 

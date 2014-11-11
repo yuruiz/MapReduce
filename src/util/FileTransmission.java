@@ -8,6 +8,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,14 +85,24 @@ public class FileTransmission extends Thread{
         }
     }
 
-    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos) {
+    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) {
 
         ArrayList<String> retfilename = new ArrayList<String>();
 
-        for (int i = 0; i < infos.size(); i++) {
+        WorkerInfo local = Config.info.get(Config.workerID);
+
+        for (WorkerInfo info: infos) {
             try {
-                WorkerInfo info = infos.get(i);
-                
+
+                if (info.equals(local)) {
+                    String filename = copyMapperResult(worker, JobID, workerinfo);
+
+                    if (filename != null) {
+                        retfilename.add(filename);
+                    }
+                    continue;
+                }
+
                 Socket socket = new Socket(info.getIpAddress(), info.getPort());
 
                 InputStream inputStream = socket.getInputStream();
@@ -132,6 +145,37 @@ public class FileTransmission extends Thread{
         }
 
         return retfilename;
+    }
+
+    public static String copyMapperResult(Worker worker, long jobID, WorkerInfo workerInfo) throws IOException{
+        List<String> fileList = worker.getfileList();
+
+        String filename = null;
+
+        String start = "Job_" + jobID;
+        String end = "ForReducer_" + workerInfo.getId();
+        for (String tempfilename : fileList) {
+            if (tempfilename.startsWith(start)
+                    && tempfilename.endsWith(end)) {
+                filename = tempfilename;
+                break;
+            }
+        }
+
+        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId();
+
+        FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);
+
+        File srcfile = new File(Config.DataDirectory + "/" + filename);
+
+        Path srcpath = Paths.get(srcfile.getPath());
+
+        Files.copy(srcpath, dest);
+
+        dest.close();
+
+        return destfile;
+
     }
 
     public void run() {

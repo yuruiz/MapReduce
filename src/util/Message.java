@@ -5,7 +5,7 @@ import task.ReduceTask;
 import worker.WorkerInfo;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 
 public class Message implements Serializable {
 
@@ -27,7 +27,7 @@ public class Message implements Serializable {
 	// the job id
 	private long jobId;
 	private WorkerInfo receiver;
-    private ArrayList<InputFile> inputs;
+    private List<InputFile> inputs;
 
 
     public void setType(MessageType type) {
@@ -86,11 +86,11 @@ public class Message implements Serializable {
 		this.receiver = receiver;
 	}
 
-    public void setInputs(ArrayList<InputFile> inputs) {
+    public void setInputs(List<InputFile> inputs) {
         this.inputs = inputs;
     }
 
-    public ArrayList<InputFile> getInputs() {
+    public List<InputFile> getInputs() {
         return this.inputs;
     }
 

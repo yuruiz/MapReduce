@@ -38,7 +38,7 @@ public class ReducerThread extends Thread {
 
             System.out.println("Reducer task " + taskID + " is now running");
 
-            inputs = FileTransmission.fetchfile(jobID, info, maperInfos);
+            inputs = FileTransmission.fetchfile(jobID, info, maperInfos, worker);
 
             if (inputs.size() != maperInfos.size()) {
                 System.out.println("Fetch files from mapper failed!");

@@ -5,6 +5,7 @@ import java.util.List;
 import worker.WorkerInfo;
 
 public class Config {
+
 	public static String MASTER_IP;
 	public static List<WorkerInfo> info;
 	public static int workerID;

@@ -1,6 +1,5 @@
 package worker;
 
-import util.Config;
 import util.Constant;
 
 import java.io.IOException;

@@ -38,7 +38,7 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public List<String> getfiles() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 

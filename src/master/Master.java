@@ -38,9 +38,12 @@ public class Master implements Runnable {
 
 	private Deque<ClientJob> toBeDone;
 
-	private final int port = Config.MASTER_PORT;
+	private final int port;
 
 	public Master() {
+		Config.setup(new String[0]);
+
+		port = Config.MASTER_PORT;
 		workers = new ArrayList<WorkerInfo>();
 		failedWorkers = new CopyOnWriteArrayList<WorkerInfo>();
 		workingWorkers = new CopyOnWriteArrayList<WorkerInfo>();
@@ -197,6 +200,10 @@ public class Master implements Runnable {
 			if (job.allMapFinished() && job.allReduceFinished()) {
 				runningJobs.remove(job);
 			}
+			break;
+		case WORKER_REG:
+			WorkerInfo newWorker = m.getReceiver();
+			
 			break;
 		default:
 			break;

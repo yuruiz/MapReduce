@@ -17,198 +17,189 @@ import java.util.List;
 /**
  * Created by yuruiz on 11/8/14.
  */
-public class FileTransmission extends Thread {
+public class FileTransmission extends Thread{
 
-	private String filename;
-	private OutputStream outputStream;
+    private String filename;
+    private OutputStream outputStream;
 
-	public FileTransmission(String filename, OutputStream outputStream) {
-		this.filename = filename;
-		this.outputStream = outputStream;
-	}
+    public FileTransmission(String filename, OutputStream outputStream) {
+        this.filename = filename;
+        this.outputStream = outputStream;
+    }
 
-	public static byte[] inttobyte(int myInteger) {
-		return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
-				.putInt(myInteger).array();
-	}
+    public static byte[] inttobyte(int myInteger){
+        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(myInteger).array();
+    }
 
-	public static int bytetoint(byte[] byteBarray) {
-		return ByteBuffer.wrap(byteBarray).order(ByteOrder.LITTLE_ENDIAN)
-				.getInt();
-	}
 
-	public static void askforfile(String filename, List<WorkerInfo> infos,
-			Worker worker) {
+    public static int bytetoint(byte [] byteBarray){
+        return ByteBuffer.wrap(byteBarray).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    }
 
-		for (int i = 0; i < infos.size(); i++) {
-			try {
-				WorkerInfo info = infos.get(i);
 
-				Socket socket = new Socket(info.getIpAddress(), info.getPort());
+    public static void askforfile(String filename, List<WorkerInfo> infos, Worker worker) {
 
-				InputStream inputStream = socket.getInputStream();
+        for (int i = 0; i < infos.size(); i++) {
+            try {
+                WorkerInfo info = infos.get(i);
 
-				ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-						socket.getOutputStream());
+                Socket socket = new Socket(info.getIpAddress(), info.getPort());
 
-				Message mesg = new Message();
+                InputStream inputStream = socket.getInputStream();
 
-				mesg.setType(Message.MessageType.FILE_REQ);
-				mesg.setFetcheFilename(filename);
-				objectOutputStream.writeObject(mesg);
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
-				byte[] len = new byte[4];
-				inputStream.read(len);
-				int filelen = bytetoint(len);
-				byte[] buffer = new byte[4096];
+                Message mesg = new Message();
 
-				int byteCount = 0;
+                mesg.setType(Message.MessageType.FILE_REQ);
+                mesg.setFetcheFilename(filename);
+                objectOutputStream.writeObject(mesg);
 
-				FileOutputStream output = new FileOutputStream(filename);
+                byte[] len = new byte[4];
+                inputStream.read(len);
+                int filelen = bytetoint(len);
+                byte[] buffer = new byte[4096];
 
-				while (byteCount < filelen) {
-					int n = inputStream.read(buffer);
-					output.write(buffer, 0, n);
-					byteCount += n;
-				}
+                int byteCount = 0;
 
-				output.close();
-				inputStream.close();
-				objectOutputStream.close();
-				socket.close();
-				worker.addfiletolist(filename);
-				break;
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+                FileOutputStream output = new FileOutputStream(filename);
 
-		}
-	}
+                while (byteCount < filelen) {
+                    int n = inputStream.read(buffer);
+                    output.write(buffer, 0, n);
+                    byteCount += n;
+                }
 
-	public static ArrayList<String> fetchfile(long JobID,
-			WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) {
+                output.close();
+                inputStream.close();
+                objectOutputStream.close();
+                socket.close();
+                worker.addfiletolist(filename);
+                break;
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-		ArrayList<String> retfilename = new ArrayList<String>();
+        }
+    }
 
-		WorkerInfo local = Config.info.get(Config.workerID);
+    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) {
 
-		for (WorkerInfo info : infos) {
-			try {
+        ArrayList<String> retfilename = new ArrayList<String>();
 
-				if (info.equals(local)) {
-					String filename = copyMapperResult(worker, JobID,
-							workerinfo);
+        WorkerInfo local = Config.info.get(Config.workerID);
 
-					if (filename != null) {
-						retfilename.add(filename);
-					}
-					continue;
-				}
+        for (WorkerInfo info: infos) {
+            try {
 
-				Socket socket = new Socket(info.getIpAddress(), info.getPort());
+                if (info.equals(local)) {
+                    String filename = copyMapperResult(worker, JobID, workerinfo);
 
-				InputStream inputStream = socket.getInputStream();
+                    if (filename != null) {
+                        retfilename.add(filename);
+                    }
+                    continue;
+                }
 
-				ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-						socket.getOutputStream());
+                Socket socket = new Socket(info.getIpAddress(), info.getPort());
 
-				Message mesg = new Message();
+                InputStream inputStream = socket.getInputStream();
 
-				mesg.setType(Message.MessageType.FILE_FETCH);
-				mesg.setFetcheFilename(null);
-				mesg.setFetchworkerInfo(workerinfo);
-				mesg.setJobId(JobID);
-				objectOutputStream.writeObject(mesg);
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
-				byte[] len = new byte[4];
-				inputStream.read(len);
-				int filelen = bytetoint(len);
-				byte[] buffer = new byte[4096];
+                Message mesg = new Message();
 
-				int byteCount = 0;
+                mesg.setType(Message.MessageType.FILE_FETCH);
+                mesg.setFetcheFilename(null);
+                mesg.setFetchworkerInfo(workerinfo);
+                mesg.setJobId(JobID);
+                objectOutputStream.writeObject(mesg);
 
-				String filename = "JobID_" + JobID + "_FromMaper_"
-						+ info.getId();
+                byte[] len = new byte[4];
+                inputStream.read(len);
+                int filelen = bytetoint(len);
+                byte[] buffer = new byte[4096];
 
-				FileOutputStream output = new FileOutputStream(
-						Config.DataDirectory + "/" + filename);
+                int byteCount = 0;
 
-				while (byteCount < filelen) {
-					int n = inputStream.read(buffer);
-					output.write(buffer, 0, n);
-					byteCount += n;
-				}
+                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId()+ "_forReducer_" + workerinfo.getId();
 
-				output.close();
+                FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
 
-				retfilename.add(filename);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+                while (byteCount < filelen) {
+                    int n = inputStream.read(buffer);
+                    output.write(buffer, 0, n);
+                    byteCount += n;
+                }
 
-		return retfilename;
-	}
+                output.close();
 
-	public static String copyMapperResult(Worker worker, long jobID,
-			WorkerInfo workerInfo) throws IOException {
-		List<String> fileList = worker.getfileList();
+                retfilename.add(filename);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-		String filename = null;
+        return retfilename;
+    }
 
-		String start = "Job_" + jobID;
-		String end = "ForReducer_" + workerInfo.getId();
-		for (String tempfilename : fileList) {
-			if (tempfilename.startsWith(start) && tempfilename.endsWith(end)) {
-				filename = tempfilename;
-				break;
-			}
-		}
+    public static String copyMapperResult(Worker worker, long jobID, WorkerInfo workerInfo) throws IOException{
+        List<String> fileList = worker.getfileList();
 
-		String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId();
+        String filename = null;
 
-		FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/"
-				+ destfile);
+        String start = "Job_" + jobID;
+        String end = "ForReducer_" + workerInfo.getId();
+        for (String tempfilename : fileList) {
+            if (tempfilename.startsWith(start)
+                    && tempfilename.endsWith(end)) {
+                filename = tempfilename;
+                break;
+            }
+        }
 
-		File srcfile = new File(Config.DataDirectory + "/" + filename);
+        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducer_" + workerInfo.getId();
 
-		Path srcpath = Paths.get(srcfile.getPath());
+        FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);
 
-		Files.copy(srcpath, dest);
+        File srcfile = new File(Config.DataDirectory + "/" + filename);
 
-		dest.close();
+        Path srcpath = Paths.get(srcfile.getPath());
 
-		return destfile;
+        Files.copy(srcpath, dest);
 
-	}
+        dest.close();
 
-	public void run() {
-		try {
-			File file = new File(filename);
-			int length = (int) file.length();
+        return destfile;
 
-			outputStream.write(inttobyte(length));
+    }
 
-			FileInputStream inputStream = new FileInputStream(file);
-			byte[] buffer = new byte[4096];
+    public void run() {
+        try{
+            File file = new File(filename);
+            int length = (int)file.length();
 
-			int buffersize = 0;
+            outputStream.write(inttobyte(length));
 
-			while ((buffersize = inputStream.read(buffer)) != -1) {
-				outputStream.write(buffer, 0, buffersize);
-			}
+            FileInputStream inputStream = new FileInputStream(file);
+            byte[] buffer = new byte[4096];
 
-			inputStream.close();
-			outputStream.close();
+            int buffersize = 0;
 
-			System.out.println("Send file " + filename + "success");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+            while ((buffersize = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, buffersize);
+            }
 
-	}
+            inputStream.close();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
 }

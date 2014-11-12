@@ -76,7 +76,7 @@ public class Worker {
 					rt.start();
 					break;
 				case FILE_FETCH:
-					System.out.println("File Fetch received");
+					System.out.println("File Fetch received from " + mesg.getFetchworkerInfo().getId());
 					long jobID = mesg.getJobId();
 					int WorkerID = mesg.getFetchworkerInfo().getId();
 					String filename = null;

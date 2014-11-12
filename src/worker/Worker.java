@@ -92,7 +92,9 @@ public class Worker {
 					}
 
 					if (filename == null) {
-						// todo send file not found
+                        OutputStream outputStream = socket.getOutputStream();
+                        outputStream.write(FileTransmission.inttobyte(0));
+                        break;
 					}
 
 					transmission = new FileTransmission(Config.DataDirectory
@@ -107,7 +109,8 @@ public class Worker {
 					String fetch_name = mesg.getFetcheFilename();
 
 					if (!fileList.contains(fetch_name)) {
-						// todo send file not found
+                        OutputStream outputStream = socket.getOutputStream();
+                        outputStream.write(FileTransmission.inttobyte(0));
 						break;
 					}
 

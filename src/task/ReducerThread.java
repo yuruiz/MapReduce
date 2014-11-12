@@ -34,66 +34,65 @@ public class ReducerThread extends Thread {
 	}
 
 	public void run() {
-		try {
+        try {
 
-			System.out.println("Reducer task " + taskID + " is now running");
+            System.out.println("Reducer task " + taskID + " is now running");
 
-			inputs = FileTransmission
-					.fetchfile(jobID, info, maperInfos, worker);
+            inputs = FileTransmission.fetchfile(jobID, info, maperInfos, worker);
 
-			if (inputs.size() != maperInfos.size()) {
-				System.out.println("Fetch files from mapper failed!");
-				return;
-			}
+            if (inputs.size() != maperInfos.size()) {
+                System.out.println("Fetch files from mapper failed!");
+                return;
+            }
 
-			for (int i = 0; i < inputs.size(); i++) {
-				worker.addfiletolist(inputs.get(i));
-			}
+            for (int i = 0; i < inputs.size(); i++) {
+                worker.addfiletolist(inputs.get(i));
+            }
 
-			HashMap<String, ArrayList<String>> map = buidmap();
-			MapReduceMethod method = task.getMethod();
+            HashMap<String, ArrayList<String>> map = buidmap();
+            MapReduceMethod method = task.getMethod();
 
 			/* Start sort */
-			Object[] keyArray = map.keySet().toArray();
-			ArrayList<String> outputs = new ArrayList<String>();
-			Arrays.sort(keyArray);
+            Object[] keyArray = map.keySet().toArray();
+            ArrayList<String> outputs = new ArrayList<String>();
+            Arrays.sort(keyArray);
 
-			for (Object key : keyArray) {
-				ArrayList<String> valueList = map.get(key);
-				KeyValuePair output = method.reduce((String) key, valueList);
-				outputs.add(output.getKey() + "\t" + output.getValue() + "\n");
-			}
+            for (Object key : keyArray) {
+                ArrayList<String> valueList = map.get(key);
+                KeyValuePair output = method.reduce((String) key, valueList);
+                outputs.add(output.getKey() + "\t" + output.getValue() + "\n");
+            }
 
-			String outputfilename = "Job_" + jobID + "_Task_" + taskID
-					+ "_ReducerResult_" + info.getId();
-			FileOutputStream outputStream = new FileOutputStream(new File(
-					Config.DataDirectory + "/" + outputfilename), false);
+            String outputfilename = "Job_" + jobID + "_Task_" + taskID + "_ReducerResult_" + info.getId();
+            FileOutputStream outputStream = new FileOutputStream(new File(Config.DataDirectory + "/" + outputfilename), false);
 
-			for (int i = 0; i < outputs.size(); i++) {
-				outputStream.write(outputs.get(i).getBytes());
-			}
+            for (int i = 0; i < outputs.size(); i++) {
+                outputStream.write(outputs.get(i).getBytes());
+            }
 
-			outputStream.close();
+            outputStream.close();
 
-			Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-					socket.getOutputStream());
-			Message mesg = new Message();
-			mesg.setType(Message.MessageType.REDUCE_RES);
-			mesg.setJobId(jobID);
-			mesg.setReduceTask(task);
-			objectOutputStream.writeObject(mesg);
-			objectOutputStream.close();
-			socket.close();
+            Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            Message mesg = new Message();
+            mesg.setType(Message.MessageType.REDUCE_RES);
+            mesg.setJobId(jobID);
+            mesg.setReduceTask(task);
+            objectOutputStream.writeObject(mesg);
+            objectOutputStream.close();
+            socket.close();
 
-			System.out.println("Reducer task " + taskID + " now finished");
+            System.out.println("Reducer task " + taskID + " now finished");
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
 
 	private HashMap<String, ArrayList<String>> buidmap() {
 		HashMap<String, ArrayList<String>> map = null;

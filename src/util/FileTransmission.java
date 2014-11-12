@@ -37,7 +37,7 @@ public class FileTransmission extends Thread{
     }
 
 
-    public static void askforfile(String filename, List<WorkerInfo> infos, Worker worker) {
+    public static void askforfile(String filename, List<WorkerInfo> infos, Worker worker) throws RuntimeException {
 
         for (int i = 0; i < infos.size(); i++) {
             try {
@@ -58,6 +58,9 @@ public class FileTransmission extends Thread{
                 byte[] len = new byte[4];
                 inputStream.read(len);
                 int filelen = bytetoint(len);
+                if (filelen == 0) {
+                    continue;
+                }
                 byte[] buffer = new byte[4096];
 
                 int byteCount = 0;
@@ -75,23 +78,24 @@ public class FileTransmission extends Thread{
                 objectOutputStream.close();
                 socket.close();
                 worker.addfiletolist(filename);
-                break;
+                return;
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
+
+        throw new RuntimeException("Ask for file failed");
     }
 
-    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) {
+    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) throws RuntimeException {
 
         ArrayList<String> retfilename = new ArrayList<String>();
 
         WorkerInfo local = Config.info.get(Config.workerID);
 
-        for (WorkerInfo info: infos) {
+        for (WorkerInfo info : infos) {
             try {
 
                 if (info.equals(local)) {
@@ -120,11 +124,15 @@ public class FileTransmission extends Thread{
                 byte[] len = new byte[4];
                 inputStream.read(len);
                 int filelen = bytetoint(len);
+
+                if (filelen == 0) {
+                    throw new RuntimeException("fetch file from " + info.getId() + " failed");
+                }
                 byte[] buffer = new byte[4096];
 
                 int byteCount = 0;
 
-                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId()+ "_forReducer_" + workerinfo.getId();
+                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId() + "_forReducer_" + workerinfo.getId();
 
                 FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
 

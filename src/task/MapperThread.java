@@ -43,7 +43,13 @@ public class MapperThread extends Thread {
 
 			if (!file.exists()) {
 				System.out.println("File " + fileName + " not exist");
-				FileTransmission.askforfile(fileName, p.getOwners(), worker);
+                try{
+                    FileTransmission.askforfile(fileName, p.getOwners(), worker);
+                } catch (RuntimeException e){
+                    e.printStackTrace();
+                    return;
+                }
+
 
 				file = new File(fileName);
 

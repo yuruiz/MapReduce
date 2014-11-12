@@ -124,7 +124,7 @@ public class FileTransmission extends Thread{
 
                 int byteCount = 0;
 
-                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId();
+                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId()+ "_forReducer_" + workerinfo.getId();
 
                 FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
 
@@ -162,7 +162,7 @@ public class FileTransmission extends Thread{
             }
         }
 
-        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId();
+        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducer_" + workerInfo.getId();
 
         FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);
 

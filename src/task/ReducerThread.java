@@ -22,7 +22,7 @@ public class ReducerThread extends Thread {
 	private int taskID;
 	private WorkerInfo info;
 	private List<WorkerInfo> maperInfos;
-	ArrayList<String> inputs;
+	private ArrayList<String> inputs;
 
 	public ReducerThread(ReduceTask task, Worker worker) {
 		this.task = task;
@@ -102,6 +102,7 @@ public class ReducerThread extends Thread {
 
 			for (String filename : inputs) {
 				String linebuf;
+                System.out.println("Now Processing file "+ filename);
 				BufferedReader reader = new BufferedReader(new FileReader(
 						Config.DataDirectory + "/" + filename));
 

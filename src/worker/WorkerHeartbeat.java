@@ -11,49 +11,50 @@ import java.util.Scanner;
 
 public class WorkerHeartbeat extends Thread {
 
-    private Worker worker;
+	private Worker worker;
 
-    public WorkerHeartbeat(Worker worker) {
-        this.worker = worker;
-    }
+	public WorkerHeartbeat(Worker worker) {
+		this.worker = worker;
+	}
 
-    @Override
-    public void run() {
+	@Override
+	public void run() {
 
-        System.out.println("Heart beat start");
+		System.out.println("Heart beat start");
 
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(worker.getInfo().getPollingPort());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		ServerSocket serverSocket = null;
+		try {
+			System.out.println("Open server at: "
+					+ worker.getInfo().getPollingPort());
+			serverSocket = new ServerSocket(worker.getInfo().getPollingPort());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        assert serverSocket != null;
+		assert serverSocket != null;
 
-        Socket socket;
-        try {
+		try {
 
-            while ((socket = serverSocket.accept()) != null) {
+			while (true) {
+				Socket socket = serverSocket.accept();
+				Scanner s = new Scanner(socket.getInputStream());
 
-                PrintWriter writer = new PrintWriter(socket.getOutputStream());
+				String response = s.nextLine();
+				PrintWriter writer = new PrintWriter(socket.getOutputStream(),
+						true);
 
-                Scanner s = new Scanner(socket.getInputStream());
+				if (response.equals(Constant.HEART_BEAT_QUERY)) {
+					writer.println(Constant.HEART_BEAT_RESPONSE);
+				}
 
-                String response = s.nextLine();
-
-                if (response.equals(Constant.HEART_BEAT_QUERY)) {
-                    writer.println(Constant.HEART_BEAT_RESPONSE);
-                }
-
-                s.close();
-                writer.close();
-                socket.close();
-            }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+				s.close();
+				writer.close();
+				socket.close();
+			}
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

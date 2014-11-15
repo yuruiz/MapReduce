@@ -28,12 +28,16 @@ public class Worker {
 		return info;
 	}
 
-	public void start() throws Exception {
+	public void start() {
 		this.info = Config.getWorkerInfo();
 		WorkerHeartbeat heartbeat = new WorkerHeartbeat(this);
 		heartbeat.start();
 
-		DFSbootstrap();
+		try {
+			DFSbootstrap();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 		System.out.println("Bootstrapping finished");
 
 		register();
@@ -76,7 +80,8 @@ public class Worker {
 					rt.start();
 					break;
 				case FILE_FETCH:
-					System.out.println("File Fetch received from " + mesg.getFetchworkerInfo().getId());
+					System.out.println("File Fetch received from "
+							+ mesg.getFetchworkerInfo().getId());
 					long jobID = mesg.getJobId();
 					int WorkerID = mesg.getFetchworkerInfo().getId();
 					String filename = null;
@@ -92,12 +97,13 @@ public class Worker {
 					}
 
 					if (filename == null) {
-                        OutputStream outputStream = socket.getOutputStream();
-                        outputStream.write(FileTransmission.inttobyte(0));
-                        break;
+						OutputStream outputStream = socket.getOutputStream();
+						outputStream.write(FileTransmission.inttobyte(0));
+						break;
 					}
 
-					transmission = new FileTransmission(filename, socket.getOutputStream());
+					transmission = new FileTransmission(filename,
+							socket.getOutputStream());
 
 					transmission.start();
 
@@ -108,8 +114,8 @@ public class Worker {
 					String fetch_name = mesg.getFetcheFilename();
 
 					if (!fileList.contains(fetch_name)) {
-                        OutputStream outputStream = socket.getOutputStream();
-                        outputStream.write(FileTransmission.inttobyte(0));
+						OutputStream outputStream = socket.getOutputStream();
+						outputStream.write(FileTransmission.inttobyte(0));
 						break;
 					}
 
@@ -186,9 +192,9 @@ public class Worker {
 		}
 	}
 
-    public List<String> getfileList() {
-        return fileList;
-    }
+	public List<String> getfileList() {
+		return fileList;
+	}
 
 	public int countLines(String filename) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(filename));

@@ -72,15 +72,11 @@ public class Master implements Runnable {
 
 	/**
 	 * 
-	 * @param w
+	 * @param failed
 	 */
-	private void handleFailure(WorkerInfo w) {
-		List<MapTask> failedMap = w.getMapTasks();
-		w.setMapTasks(new ArrayList<MapTask>());
-		this.handleMapFailure(failedMap);
-		List<ReduceTask> failedReduce = w.getReduceTasks();
-		w.setReduceTasks(new ArrayList<ReduceTask>());
-		this.handleReduceFailure(failedReduce);
+	private void handleFailure(WorkerInfo failed) {
+		this.handleMapFailure(failed);
+		this.handleReduceFailure(failed);
 
 	}
 
@@ -92,14 +88,22 @@ public class Master implements Runnable {
 	 * 
 	 * @param failedReduce
 	 */
-	private void handleReduceFailure(List<ReduceTask> failedReduce) {
+	private void handleReduceFailure(WorkerInfo failed) {
+		List<ReduceTask> failedReduce = failed.getReduceTasks();
 		List<WorkerInfo> backups = this.getIdleWorkers(failedReduce.size());
 		/*
 		 * Reassign reduce task to working workers
 		 */
 		for (int i = 0; i < failedReduce.size(); i++) {
-			WorkerInfo backup = backups.get(i % backups.size());
 			ReduceTask task = failedReduce.get(i);
+			MasterJob job = idToJob.get(task.getJobId());
+
+			if (task.getMappers().contains(failed)
+					|| !runningJobs.contains(job)) {
+				continue;
+			}
+
+			WorkerInfo backup = backups.get(i % backups.size());
 			Message m = new Message();
 			m.setType(MessageType.REDUCE_REQ);
 			m.setReduceTask(task);
@@ -117,17 +121,43 @@ public class Master implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
+		failed.setReduceTasks(new ArrayList<ReduceTask>());
+		failed.setMapTasks(new ArrayList<MapTask>());
+
 	}
 
-	private void handleMapFailure(List<MapTask> failedMap) {
+	/**
+	 * Reassign the map tasks of the failed worker
+	 * 
+	 * @param failed
+	 * @param failedMap
+	 */
+	private void handleMapFailure(WorkerInfo failed) {
+		List<MapTask> failedMap = failed.getMapTasks();
 		List<WorkerInfo> backups = getIdleWorkers(failedMap.size());
 		for (int i = 0; i < failedMap.size(); i++) {
 			MapTask t = failedMap.get(i);
 			WorkerInfo backup = backups.get(i % backups.size());
 			t.setWorker(backup);
+
+			MasterJob job = idToJob.get(t.getJobId());
+			if (runningJobs.contains(job)) {
+				synchronized (job) {
+					job.addMapTask(t);
+					for (ReduceTask r : job.getReducers()) {
+						if (r.getReducer().equals(failed)) {
+							r.setReducer(backup);
+						}
+						r.replaceMapper(failed, backup);
+					}
+				}
+			}
+
 			Message m = new Message();
 			m.setType(MessageType.MAP_REQ);
+			m.setMapTask(t);
 			try {
 				Socket socket = new Socket(backup.getIpAddress(),
 						backup.getPort());
@@ -204,8 +234,15 @@ public class Master implements Runnable {
 			break;
 		case WORKER_REG:
 			WorkerInfo newWorker = m.getReceiver();
-			workers.add(newWorker);
+
+			Log.log("worker registered:" + newWorker.getId() + " "
+					+ newWorker.getPort());
+
 			workingWorkers.add(newWorker);
+			if (!workers.contains(newWorker)) {
+				workers.add(newWorker);
+			}
+
 			newWorker.setMapTasks(new ArrayList<MapTask>());
 			newWorker.setReduceTasks(new ArrayList<ReduceTask>());
 			List<InputFile> inputFiles = m.getInputs();
@@ -260,7 +297,7 @@ public class Master implements Runnable {
 	 * @return
 	 */
 	public List<WorkerInfo> getWorkers() {
-		return workers;
+		return workingWorkers;
 	}
 
 	private class ServiceHandler implements Runnable {
@@ -302,7 +339,7 @@ public class Master implements Runnable {
 			int reduceBaseId = 0;
 			for (WorkerInfo reducer : reducers) {
 				ReduceTask r = new ReduceTask();
-				r.setMappers(workingWorkers);
+				r.setMappers(new ArrayList<WorkerInfo>(workingWorkers));
 				r.setReducer(reducer);
 				r.setJobId(jobId);
 				r.setTaskId(reduceBaseId++);

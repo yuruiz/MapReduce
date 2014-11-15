@@ -28,6 +28,12 @@ public class WordCount implements ClientJob {
 			list.add(pair);
 		}
 
+		try {
+			Thread.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return list;
 	}
 
@@ -36,6 +42,12 @@ public class WordCount implements ClientJob {
 		int sum = 0;
 		for (String s : values) {
 			sum += Integer.parseInt(s);
+		}
+		try {
+			Thread.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return new KeyValuePair(key, String.valueOf(sum));
 	}
@@ -60,7 +72,7 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public int getMaxReduceFile() {
-		return 2;
+		return 3;
 	}
 
 	@Override

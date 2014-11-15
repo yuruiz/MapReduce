@@ -31,6 +31,10 @@ public class ReduceTask implements Serializable {
 		this.mappers = mappers;
 	}
 
+	public void replaceMapper(WorkerInfo failed, WorkerInfo backup) {
+		mappers.set(mappers.indexOf(failed), backup);
+	}
+
 	public WorkerInfo getReducer() {
 		return reducer;
 	}

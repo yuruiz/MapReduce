@@ -89,7 +89,7 @@ public class FileTransmission extends Thread{
         throw new RuntimeException("Ask for file failed");
     }
 
-    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker) throws RuntimeException {
+    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker, int taskID) throws RuntimeException {
 
         ArrayList<String> retfilename = new ArrayList<String>();
 
@@ -99,7 +99,7 @@ public class FileTransmission extends Thread{
             try {
 
                 if (info.equals(local)) {
-                    String filename = copyMapperResult(worker, JobID, workerinfo);
+                    String filename = copyMapperResult(worker, JobID, workerinfo, taskID);
 
                     if (filename != null) {
                         retfilename.add(filename);
@@ -132,7 +132,7 @@ public class FileTransmission extends Thread{
 
                 int byteCount = 0;
 
-                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId() + "_forReducer_" + workerinfo.getId();
+                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId() + "_forReducerTask_" + taskID;
 
                 FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
 
@@ -155,7 +155,7 @@ public class FileTransmission extends Thread{
         return retfilename;
     }
 
-    public static String copyMapperResult(Worker worker, long jobID, WorkerInfo workerInfo) throws IOException{
+    public static String copyMapperResult(Worker worker, long jobID, WorkerInfo workerInfo, int taskID) throws IOException{
         List<String> fileList = worker.getfileList();
 
         String filename = null;
@@ -170,7 +170,7 @@ public class FileTransmission extends Thread{
             }
         }
 
-        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducer_" + workerInfo.getId();
+        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducerTask_" + taskID;
 
         FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);
 

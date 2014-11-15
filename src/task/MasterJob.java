@@ -10,38 +10,40 @@ import util.Partition;
 public class MasterJob {
 	private List<MapTask> mappers;
 	private List<ReduceTask> reducers;
+	private List<MapTask> finishedMaps;
+	private List<ReduceTask> finishedReduces;
 	private Set<Partition> partitions;
 	private MapReduceMethod job;
 	private long id;
-	private int finishedMaps;
-	private int finishedReduces;
 
 	public MasterJob() {
 		mappers = new ArrayList<MapTask>();
 		reducers = new ArrayList<ReduceTask>();
 		partitions = new HashSet<Partition>();
-		finishedMaps = 0;
-		finishedReduces = 0;
+		finishedMaps = new ArrayList<MapTask>();
+		finishedReduces = new ArrayList<ReduceTask>();
+
 	}
 
 	public void finishMapTask(MapTask map) {
-		if (mappers.contains(map) && !map.isFinished()) {
-			finishedMaps++;
-			map.setFinished(true);
+		if (mappers.contains(map)) {
+			mappers.remove(map);
+			finishedMaps.add(map);
 		}
 	}
 
 	public boolean allMapFinished() {
-		return finishedMaps == mappers.size();
+		return mappers.size() == 0;
 	}
 
 	public boolean allReduceFinished() {
-		return finishedReduces == reducers.size();
+		return reducers.size() == 0;
 	}
 
 	public void finishReduceTask(ReduceTask reduce) {
 		if (reducers.contains(reduce)) {
-			finishedReduces++;
+			reducers.remove(reduce);
+			finishedReduces.add(reduce);
 		}
 	}
 
@@ -50,7 +52,9 @@ public class MasterJob {
 	}
 
 	public void addMapTask(MapTask map) {
-		mappers.add(map);
+		if (!mappers.contains(map)) {
+			mappers.add(map);
+		}
 	}
 
 	public List<ReduceTask> getReducers() {

@@ -170,6 +170,10 @@ public class FileTransmission extends Thread{
             }
         }
 
+        if (filename == null) {
+            return null;
+        }
+
         String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducerTask_" + taskID;
 
         FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);

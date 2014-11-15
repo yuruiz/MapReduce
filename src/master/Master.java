@@ -100,7 +100,6 @@ public class Master implements Runnable {
 		for (int i = 0; i < failedReduce.size(); i++) {
 			WorkerInfo backup = backups.get(i % backups.size());
 			ReduceTask task = failedReduce.get(i);
-			task.setReducer(backup);
 			Message m = new Message();
 			m.setType(MessageType.REDUCE_REQ);
 			m.setReduceTask(task);
@@ -117,9 +116,6 @@ public class Master implements Runnable {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			for (WorkerInfo w : task.getMappers()) {
-
 			}
 		}
 	}

@@ -5,9 +5,9 @@ import task.ClientJob;
 
 public class MasterCommandUI {
 
-	private static Master master;
+	private Master master;
 
-	public static void main(String[] args) {
+	public void run() {
 
 		master = new Master();
 
@@ -61,5 +61,10 @@ public class MasterCommandUI {
 		s.close();
 		System.out.println("exited");
 
+	}
+
+	public static void main(String[] args) {
+		MasterCommandUI m = new MasterCommandUI();
+		m.run();
 	}
 }

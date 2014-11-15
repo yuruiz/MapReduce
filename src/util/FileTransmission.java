@@ -188,7 +188,7 @@ public class FileTransmission extends Thread{
 
     public void run() {
         try{
-            File file = new File(filename);
+            File file = new File(Config.DataDirectory + "/" + filename);
             int length = (int)file.length();
 
             outputStream.write(inttobyte(length));

@@ -58,7 +58,7 @@ public class MapperThread extends Thread {
                 }
             }
 
-            FileReader reader = new FileReader(fileName);
+            FileReader reader = new FileReader(Config.DataDirectory + "/" + fileName);
             String[][] input = reader.getKeyValuePairs(p.getStartIndex(), p.getLength());
 
             for (int j = 0; j < input.length; j++) {

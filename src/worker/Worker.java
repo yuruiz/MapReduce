@@ -97,8 +97,7 @@ public class Worker {
                         break;
 					}
 
-					transmission = new FileTransmission(Config.DataDirectory
-							+ "/" + filename, socket.getOutputStream());
+					transmission = new FileTransmission(filename, socket.getOutputStream());
 
 					transmission.start();
 

@@ -16,11 +16,14 @@ public class ReduceTask implements Serializable {
 	private List<WorkerInfo> mappers;
 	// The reduce task has a reducer that's doing the task
 	private WorkerInfo reducer;
+
+	// the worker who is executing the reduce task, upon a reducer failure,
+	// another worker may take his job
+	private WorkerInfo executor;
 	private long jobId;
 	private int taskId;
 	private MapReduceMethod job;
-	// the id of the worker who is executing the reduce task, upon a reducer
-	// failure, another worker may take his job by taking the failed node's id
+
 	private int workerId;
 
 	public List<WorkerInfo> getMappers() {
@@ -41,6 +44,15 @@ public class ReduceTask implements Serializable {
 
 	public void setReducer(WorkerInfo reducer) {
 		this.reducer = reducer;
+		this.executor = reducer;
+	}
+
+	public void setExecutor(WorkerInfo executor) {
+		this.executor = executor;
+	}
+
+	public WorkerInfo getExecutor() {
+		return executor;
 	}
 
 	public long getJobId() {

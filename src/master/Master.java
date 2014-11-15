@@ -148,7 +148,7 @@ public class Master implements Runnable {
 					job.addMapTask(t);
 					for (ReduceTask r : job.getReducers()) {
 						if (r.getReducer().equals(failed)) {
-							r.setReducer(backup);
+							r.setExecutor(backup);
 						}
 						r.replaceMapper(failed, backup);
 					}
@@ -433,7 +433,7 @@ public class Master implements Runnable {
 	private void sendReduceTask(MasterJob job) {
 		List<ReduceTask> tasks = job.getReducers();
 		for (ReduceTask task : tasks) {
-			WorkerInfo reducer = task.getReducer();
+			WorkerInfo reducer = task.getExecutor();
 			try {
 				Log.log("send reduce: " + task.getTaskId() + " "
 						+ reducer.getIpAddress() + " " + reducer.getPort());

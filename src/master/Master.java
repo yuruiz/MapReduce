@@ -102,7 +102,8 @@ public class Master implements Runnable {
 					|| !runningJobs.contains(job)) {
 				continue;
 			}
-
+			
+			System.out.println("reach");
 			WorkerInfo backup = backups.get(i % backups.size());
 			Message m = new Message();
 			m.setType(MessageType.REDUCE_REQ);

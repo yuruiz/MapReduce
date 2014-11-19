@@ -16,127 +16,130 @@ import java.util.List;
 
 public class ReducerThread extends Thread {
 
-	private ReduceTask task;
-	private Worker worker;
-	private long jobID;
-	private int taskID;
-	private WorkerInfo info;
-	private List<WorkerInfo> maperInfos;
-	private ArrayList<String> inputs;
+    private ReduceTask task;
+    private Worker worker;
+    private long jobID;
+    private int taskID;
+    private WorkerInfo info;
+    private List<WorkerInfo> maperInfos;
+    private ArrayList<String> inputs;
 
-	public ReducerThread(ReduceTask task, Worker worker) {
-		this.task = task;
-		this.jobID = task.getJobId();
-		this.taskID = task.getTaskId();
-		this.info = task.getReducer();
-		this.maperInfos = task.getMappers();
-		this.worker = worker;
-	}
+    public ReducerThread(ReduceTask task, Worker worker) {
+        this.task = task;
+        this.jobID = task.getJobId();
+        this.taskID = task.getTaskId();
+        this.info = task.getReducer();
+        this.maperInfos = task.getMappers();
+        this.worker = worker;
+    }
 
-	public void run() {
-		try {
+    public void run() {
+        try {
 
-			System.out.println("Reducer task " + taskID + " is now running");
+            System.out.println("Reducer task " + taskID + " is now running");
 
-			inputs = FileTransmission.fetchfile(jobID, info, maperInfos,
-					worker, taskID);
+			/*Try to fetch Map result file from other node */
+            inputs = FileTransmission.fetchfile(jobID, info, maperInfos, worker, taskID);
 
-			if (inputs.size() != maperInfos.size()) {
-				System.out.println("Fetch files from mapper failed!");
-				return;
-			}
+            if (inputs.size() != maperInfos.size()) {
+                System.out.println("Fetch files from mapper failed!");
+                return;
+            }
 
-			for (int i = 0; i < inputs.size(); i++) {
-				worker.addfiletolist(inputs.get(i));
-			}
+			/*Add all the fetched files to file list*/
+            for (int i = 0; i < inputs.size(); i++) {
+                worker.addfiletolist(inputs.get(i));
+            }
 
-			HashMap<String, ArrayList<String>> map = buidmap();
-			MapReduceMethod method = task.getMethod();
+            /*Read the fetched files and build them into a hashmap*/
+            HashMap<String, ArrayList<String>> map = buidmap();
+            MapReduceMethod method = task.getMethod();
 
-			/* Start sort */
-			Object[] keyArray = map.keySet().toArray();
-			ArrayList<String> outputs = new ArrayList<String>();
-			Arrays.sort(keyArray);
+            Object[] keyArray = map.keySet().toArray();
+            ArrayList<String> outputs = new ArrayList<String>();
 
-			for (Object key : keyArray) {
-				ArrayList<String> valueList = map.get(key);
-				KeyValuePair output = method.reduce((String) key, valueList);
-				outputs.add(output.getKey() + "\t" + output.getValue() + "\n");
-			}
+			/*Sort the fetched data*/
+            Arrays.sort(keyArray);
 
-			String outputfilename = "Job_" + jobID + "_Task_" + taskID
-					+ "_ReducerResult_" + info.getId();
-			FileOutputStream outputStream = new FileOutputStream(new File(
-					Config.DataDirectory + "/" + outputfilename), false);
+			/*Send the sorted Key value pair to reduce method*/
+            for (Object key : keyArray) {
+                ArrayList<String> valueList = map.get(key);
+                KeyValuePair output = method.reduce((String) key, valueList);
+                outputs.add(output.getKey() + "\t" + output.getValue() + "\n");
+            }
 
-			for (int i = 0; i < outputs.size(); i++) {
-				outputStream.write(outputs.get(i).getBytes());
-			}
+            /*Write down the Reduce result*/
+            String outputfilename = "Job_" + jobID + "_Task_" + taskID + "_ReducerResult_" + info.getId();
+            FileOutputStream outputStream = new FileOutputStream(new File(Config.DataDirectory + "/" + outputfilename), false);
 
-			outputStream.close();
+            for (int i = 0; i < outputs.size(); i++) {
+                outputStream.write(outputs.get(i).getBytes());
+            }
 
-			Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-					socket.getOutputStream());
-			Message mesg = new Message();
-			mesg.setType(Message.MessageType.REDUCE_RES);
-			mesg.setJobId(jobID);
-			mesg.setReduceTask(task);
-			objectOutputStream.writeObject(mesg);
-			objectOutputStream.close();
-			socket.close();
+            outputStream.close();
 
-			System.out.println("Reducer task " + taskID + " now finished");
+            /*Send task done message to master*/
+            Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            Message mesg = new Message();
+            mesg.setType(Message.MessageType.REDUCE_RES);
+            mesg.setJobId(jobID);
+            mesg.setReduceTask(task);
+            objectOutputStream.writeObject(mesg);
+            objectOutputStream.close();
+            socket.close();
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			return;
-		}
-	}
+            System.out.println("Reducer task " + taskID + " now finished");
 
-	private HashMap<String, ArrayList<String>> buidmap() {
-		HashMap<String, ArrayList<String>> map = null;
-		try {
-			map = new HashMap<String, ArrayList<String>>();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
 
-			for (String filename : inputs) {
-				String linebuf;
-				System.out.println("Now Processing file " + filename);
-				BufferedReader reader = new BufferedReader(new FileReader(
-						Config.DataDirectory + "/" + filename));
+    /*Read the fetched files and build them into a hashmap, all the key value pair with same key are merged*/
+    private HashMap<String, ArrayList<String>> buidmap() {
+        HashMap<String, ArrayList<String>> map = null;
+        try {
+            map = new HashMap<String, ArrayList<String>>();
 
-				while ((linebuf = reader.readLine()) != null) {
-					String[] kvPair = linebuf.split("\t");
+            for (String filename : inputs) {
+                String linebuf;
+                System.out.println("Now Processing file " + filename);
+                BufferedReader reader = new BufferedReader(new FileReader(Config.DataDirectory + "/" + filename));
 
-					if (kvPair.length != 2) {
-						continue;
-					}
+                while ((linebuf = reader.readLine()) != null) {
+                    String[] kvPair = linebuf.split("\t");
 
-					ArrayList<String> valueList;
+                    if (kvPair.length != 2) {
+                        continue;
+                    }
 
-					if (map.containsKey(kvPair[0])) {
-						valueList = map.get(kvPair[0]);
-					} else {
-						valueList = new ArrayList<>();
-						map.put(kvPair[0], valueList);
-					}
+                    ArrayList<String> valueList;
 
-					valueList.add(kvPair[1]);
-				}
+                    if (map.containsKey(kvPair[0])) {
+                        valueList = map.get(kvPair[0]);
+                    } else {
+                        valueList = new ArrayList<>();
+                        map.put(kvPair[0], valueList);
+                    }
 
-				reader.close();
-			}
+                    valueList.add(kvPair[1]);
+                }
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+                reader.close();
+            }
 
-		return map;
-	}
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return map;
+    }
 }

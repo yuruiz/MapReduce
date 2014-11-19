@@ -30,16 +30,23 @@ public class MapperThread extends Thread {
 
     public void run() {
         System.out.println("Map task " + taskID + " is now running");
+
+        /*Get the customized Mapper method*/
         MapReduceMethod method = task.getMethod();
+
+        /*Get the Mapper input file list*/
         List<Partition> filepartitions = task.getPartitions();
+
         System.out.println(filepartitions.size());
         List<KeyValuePair> outputs = new LinkedList<KeyValuePair>();
 
+        /*Check if all the files are located in current nodes*/
         for (int i = 0; i < filepartitions.size(); i++) {
             String fileName = filepartitions.get(i).getFileName();
             Partition p = filepartitions.get(i);
             File file = new File(Config.DataDirectory + "/" + fileName);
 
+            /*If file not located locally, try to fetch files from other node that might have it*/
             if (!file.exists()) {
                 System.out.println("File " + fileName + " not exist");
                 try {
@@ -58,9 +65,11 @@ public class MapperThread extends Thread {
                 }
             }
 
+            /*read the data in the file*/
             FileReader reader = new FileReader(Config.DataDirectory + "/" + fileName);
             String[][] input = reader.getKeyValuePairs(p.getStartIndex(), p.getLength());
 
+            /*Pass the data to the Map task*/
             for (int j = 0; j < input.length; j++) {
                 List<KeyValuePair> temp = method.map(input[j][0], input[j][1]);
                 if (temp != null) {
@@ -71,10 +80,12 @@ public class MapperThread extends Thread {
 
         System.out.println("Start shuffling");
 
+        /*Shuffle the Map result*/
         shuffle(outputs);
 
         System.out.println("Finish shuffling");
 
+        /*Send task done message back to master node*/
         try {
             Socket socket = new Socket(Config.MASTER_IP, Config.MASTER_PORT);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -109,6 +120,7 @@ public class MapperThread extends Thread {
 
         System.out.println("Start distribution records, record number " + outputs.size());
 
+        /*Suffle the Map result and dispatch them to corresponding reducer*/
         for (KeyValuePair record : outputs) {
             String key = record.getKey();
             int tempKey;
@@ -121,6 +133,7 @@ public class MapperThread extends Thread {
 
         System.out.println("Start writing records to file");
 
+        /*Write a Map result file for each reducer*/
         for (int i = 0; i < reduceNum; i++) {
             List<KeyValuePair> templist = map.get(i);
 

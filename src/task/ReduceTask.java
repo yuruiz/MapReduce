@@ -3,6 +3,7 @@ package task;
 import worker.WorkerInfo;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReduceTask implements Serializable {
@@ -16,6 +17,8 @@ public class ReduceTask implements Serializable {
 	private List<WorkerInfo> mappers;
 	// The reduce task has a reducer that's doing the task
 	private WorkerInfo reducer;
+	// the mappers that have been replaced
+	private List<WorkerInfo> replaced;
 
 	// the worker who is executing the reduce task, upon a reducer failure,
 	// another worker may take his job
@@ -23,8 +26,13 @@ public class ReduceTask implements Serializable {
 	private long jobId;
 	private int taskId;
 	private MapReduceMethod job;
+	private int size;
 
 	private int workerId;
+
+	public ReduceTask() {
+		replaced = new ArrayList<WorkerInfo>();
+	}
 
 	public List<WorkerInfo> getMappers() {
 		return mappers;
@@ -32,10 +40,23 @@ public class ReduceTask implements Serializable {
 
 	public void setMappers(List<WorkerInfo> mappers) {
 		this.mappers = mappers;
+		size = mappers.size();
+	}
+
+	public int getSize() {
+		return size;
 	}
 
 	public void replaceMapper(WorkerInfo failed, WorkerInfo backup) {
-		mappers.set(mappers.indexOf(failed), backup);
+		mappers.remove(failed);
+		if (!mappers.contains(backup)) {
+			mappers.add(backup);
+		}
+		replaced.add(failed);
+	}
+
+	public List<WorkerInfo> getReplaced() {
+		return replaced;
 	}
 
 	public WorkerInfo getReducer() {

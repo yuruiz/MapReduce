@@ -7,29 +7,38 @@ import java.io.IOException;
 import java.util.List;
 
 /**
+ * This class writes intermediate result to local disk
+ * 
  * Created by yuruiz on 11/7/14.
  */
 public class FileWriter {
-    String filename;
+	protected String fileName;
 
-    public FileWriter(String fileName){
-        filename = fileName;
-    }
+	public FileWriter(String fileName) {
+		this.fileName = fileName;
+	}
 
-    public void write(List<KeyValuePair> recordlist) {
-        try {
-            FileOutputStream outputStream = new FileOutputStream(new File(filename), false);
+	/**
+	 * Take a list of key value pairs and write it to the disk
+	 * 
+	 * @param recordlist
+	 */
+	public void write(List<KeyValuePair> recordlist) {
+		try {
+			FileOutputStream outputStream = new FileOutputStream(new File(
+					fileName), false);
 
-            for (KeyValuePair tempPair: recordlist) {
-                String linebuf = tempPair.getKey() + "\t" + tempPair.getValue() + "\n";
-                outputStream.write(linebuf.getBytes());
-            }
+			for (KeyValuePair tempPair : recordlist) {
+				String linebuf = tempPair.getKey() + "\t" + tempPair.getValue()
+						+ "\n";
+				outputStream.write(linebuf.getBytes());
+			}
 
-            outputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+			outputStream.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

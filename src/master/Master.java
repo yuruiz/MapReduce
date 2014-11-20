@@ -126,7 +126,7 @@ public class Master implements Runnable {
 			ReduceTask task = failedReduce.get(i);
 			MasterJob job = idToJob.get(task.getJobId());
 
-			if (task.getMappers().contains(failed)
+			if (task.getReplaced().contains(failed)
 					|| !runningJobs.contains(job)) {
 				continue;
 			}
@@ -145,6 +145,8 @@ public class Master implements Runnable {
 						backup.getPort());
 				ObjectOutputStream out = new ObjectOutputStream(
 						socket.getOutputStream());
+				Log.log("send reduce: " + task.getTaskId() + " "
+						+ backup.getPort());
 				out.writeObject(m);
 				socket.close();
 			} catch (Exception e) {
@@ -281,8 +283,10 @@ public class Master implements Runnable {
 			 */
 			MapTask map = m.getMapTask();
 			job = idToJob.get(map.getJobId());
+			Log.log(job.getMappers().size());
 			job.finishMapTask(map);
 			if (job.allMapFinished()) {
+				Log.log("map finished, assign reduce");
 				this.sendReduceTask(job);
 			}
 			break;
@@ -307,13 +311,15 @@ public class Master implements Runnable {
 			 * group of workers. Add the data files the worker reports to the
 			 * file pool
 			 */
-			WorkerInfo newWorker = m.getReceiver();
+			WorkerInfo newWorker = m.getWorker();
 
 			Log.log("worker registered:" + newWorker.getId() + " "
 					+ newWorker.getPort());
 
 			synchronized (workingWorkers) {
-				workingWorkers.add(newWorker);
+				if (!workingWorkers.contains(newWorker)) {
+					workingWorkers.add(newWorker);
+				}
 				if (!workers.contains(newWorker)) {
 					workers.add(newWorker);
 				}
@@ -677,6 +683,5 @@ public class Master implements Runnable {
 		return expectedSize;
 
 	}
-
 
 }

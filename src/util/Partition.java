@@ -5,6 +5,14 @@ import java.util.List;
 
 import worker.WorkerInfo;
 
+/**
+ * Implementation of a data partition, this class sets the source file it's on
+ * and the start and end index. It also maintains the workers that has such data
+ * file.
+ * 
+ * @author siyuwei
+ *
+ */
 public class Partition implements Serializable {
 	/**
 	 * 

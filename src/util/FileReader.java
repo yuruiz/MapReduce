@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
- * Created by yuruiz on 11/7/14.
+ * This class reads key and values from a data file and convert it to key and
+ * value pairs.
+ * 
+ * @author yuruiz on 11/7/14.
  */
 public class FileReader {
 
@@ -21,16 +24,20 @@ public class FileReader {
 			RandomAccessFile input = new RandomAccessFile(fileName, "r");
 			int recordcount = 0;
 
+			/*
+			 * skip the unneeded lines
+			 */
 			while (recordcount < index) {
 				input.readLine();
 				recordcount++;
 			}
-
+			
+			/*
+			 * convert strings to key and values
+			 */
 			keyValuePairs = new String[len][2];
-
 			for (int i = 0; i < len; i++) {
 				String linebuf = input.readLine();
-				// System.out.println(linebuf);
 				if (linebuf == null) {
 					break;
 				}

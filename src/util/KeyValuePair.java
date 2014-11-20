@@ -2,6 +2,12 @@ package util;
 
 import java.io.Serializable;
 
+/**
+ * This class defines a key/value pair used in map/reduce tasks
+ * 
+ * @author siyuwei
+ *
+ */
 public class KeyValuePair implements Serializable {
 
 	/**

@@ -15,210 +15,234 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by yuruiz on 11/8/14.
+ * This class takes care of transferring a file from one worker to another. This
+ * happens when a mapper does not have the file it should work on or a reducer
+ * asks a mapper for intermediate file
+ * 
+ * @author yuruiz on 11/8/14.
  */
 public class FileTransmission extends Thread {
 
-    private String filename;
-    private OutputStream outputStream;
+	private String filename;
+	private OutputStream outputStream;
 
-    public FileTransmission(String filename, OutputStream outputStream) {
-        this.filename = filename;
-        this.outputStream = outputStream;
-    }
+	public FileTransmission(String filename, OutputStream outputStream) {
+		this.filename = filename;
+		this.outputStream = outputStream;
+	}
 
-    /*Convert int to binary*/
-    public static byte[] inttobyte(int myInteger) {
-        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(myInteger).array();
-    }
+	/* Convert int to binary */
+	public static byte[] inttobyte(int myInteger) {
+		return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
+				.putInt(myInteger).array();
+	}
 
-    /*Convert binay to int*/
-    public static int bytetoint(byte[] byteBarray) {
-        return ByteBuffer.wrap(byteBarray).order(ByteOrder.LITTLE_ENDIAN).getInt();
-    }
+	/* Convert binay to int */
+	public static int bytetoint(byte[] byteBarray) {
+		return ByteBuffer.wrap(byteBarray).order(ByteOrder.LITTLE_ENDIAN)
+				.getInt();
+	}
 
-    /*Ask specific files from others nodes*/
-    public static void askforfile(String filename, List<WorkerInfo> infos, Worker worker) throws RuntimeException {
+	/* Ask specific files from others nodes */
+	public static void askforfile(String filename, List<WorkerInfo> infos,
+			Worker worker) throws RuntimeException {
 
-        for (int i = 0; i < infos.size(); i++) {
-            try {
-                WorkerInfo info = infos.get(i);
+		for (int i = 0; i < infos.size(); i++) {
+			try {
+				WorkerInfo info = infos.get(i);
+				Socket socket = new Socket(info.getIpAddress(), info.getPort());
+				InputStream inputStream = socket.getInputStream();
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+						socket.getOutputStream());
+				Message mesg = new Message();
 
-                Socket socket = new Socket(info.getIpAddress(), info.getPort());
+				mesg.setType(Message.MessageType.FILE_REQ);
+				mesg.setFetcheFilename(filename);
+				objectOutputStream.writeObject(mesg);
 
-                InputStream inputStream = socket.getInputStream();
+				byte[] len = new byte[4];
+				inputStream.read(len);
+				int filelen = bytetoint(len);
 
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+				/*
+				 * If zero received, it means file not found on the nodes, try
+				 * next node
+				 */
+				if (filelen == 0) {
+					continue;
+				}
+				byte[] buffer = new byte[4096];
+				int byteCount = 0;
+				FileOutputStream output = new FileOutputStream(
+						Config.DataDirectory + "/" + filename);
 
-                Message mesg = new Message();
+				while (byteCount < filelen) {
+					int n = inputStream.read(buffer);
+					output.write(buffer, 0, n);
+					byteCount += n;
+				}
 
-                mesg.setType(Message.MessageType.FILE_REQ);
-                mesg.setFetcheFilename(filename);
-                objectOutputStream.writeObject(mesg);
+				output.close();
+				inputStream.close();
+				objectOutputStream.close();
+				socket.close();
+				worker.addfiletolist(filename);
+				return;
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
-                byte[] len = new byte[4];
-                inputStream.read(len);
-                int filelen = bytetoint(len);
+		throw new RuntimeException("Ask for file failed");
+	}
 
-				/*If zero received, it means file not found on the nodes, try next node*/
-                if (filelen == 0) {
-                    continue;
-                }
-                byte[] buffer = new byte[4096];
+	/*
+	 * Ask the Map result files from other node for the reduce task, the reduce
+	 * task is identified by the node info id
+	 */
+	public static ArrayList<String> fetchfile(long JobID,
+			WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker,
+			int taskID) throws RuntimeException {
 
-                int byteCount = 0;
+		ArrayList<String> retfilename = new ArrayList<String>();
 
-                FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
+		WorkerInfo local = Config.info.get(Config.workerID);
 
-                while (byteCount < filelen) {
-                    int n = inputStream.read(buffer);
-                    output.write(buffer, 0, n);
-                    byteCount += n;
-                }
+		for (WorkerInfo info : infos) {
+			try {
 
-                output.close();
-                inputStream.close();
-                objectOutputStream.close();
-                socket.close();
-                worker.addfiletolist(filename);
-                return;
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+				/* IF the node is the local node, process the file directly */
+				if (info.equals(local)) {
+					List<String> fileNames = copyMapperResult(worker, JobID,
+							workerinfo, taskID);
 
-        throw new RuntimeException("Ask for file failed");
-    }
+					if (fileNames != null && fileNames.size() != 0) {
+						retfilename.addAll(fileNames);
+					}
+					continue;
+				}
 
-    /*Ask the Map result files from other node for the reduce task, the reduce task is identified by the node info id*/
-    public static ArrayList<String> fetchfile(long JobID, WorkerInfo workerinfo, List<WorkerInfo> infos, Worker worker, int taskID) throws RuntimeException {
+				Socket socket = new Socket(info.getIpAddress(), info.getPort());
 
-        ArrayList<String> retfilename = new ArrayList<String>();
+				InputStream inputStream = socket.getInputStream();
 
-        WorkerInfo local = Config.info.get(Config.workerID);
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+						socket.getOutputStream());
 
-        for (WorkerInfo info : infos) {
-            try {
+				Message mesg = new Message();
 
-                /*IF the node is the local node, process the file directly*/
-                if (info.equals(local)) {
-                    String filename = copyMapperResult(worker, JobID, info, taskID);
+				mesg.setType(Message.MessageType.FILE_FETCH);
+				mesg.setFetcheFilename(null);
+				mesg.setFetchworkerInfo(workerinfo);
+				mesg.setJobId(JobID);
+				objectOutputStream.writeObject(mesg);
 
-                    if (filename != null) {
-                        retfilename.add(filename);
-                    }
-                    continue;
-                }
+				byte[] len = new byte[4];
+				inputStream.read(len);
+				int filelen = bytetoint(len);
 
-                Socket socket = new Socket(info.getIpAddress(), info.getPort());
+				if (filelen == 0) {
+					throw new RuntimeException("fetch file from "
+							+ info.getId() + " failed");
+				}
+				byte[] buffer = new byte[4096];
 
-                InputStream inputStream = socket.getInputStream();
+				int byteCount = 0;
 
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+				System.out.println("Current fetching node is "
+						+ workerinfo.getId());
+				String filename = "JobID_" + JobID + "_FromMaper_"
+						+ info.getId() + "_forReducerTask_" + taskID;
 
-                Message mesg = new Message();
+				FileOutputStream output = new FileOutputStream(
+						Config.DataDirectory + "/" + filename);
 
-                mesg.setType(Message.MessageType.FILE_FETCH);
-                mesg.setFetcheFilename(null);
-                mesg.setFetchworkerInfo(workerinfo);
-                mesg.setJobId(JobID);
-                objectOutputStream.writeObject(mesg);
+				while (byteCount < filelen) {
+					int n = inputStream.read(buffer);
+					output.write(buffer, 0, n);
+					byteCount += n;
+				}
 
-                byte[] len = new byte[4];
-                inputStream.read(len);
-                int filelen = bytetoint(len);
+				output.close();
 
-                if (filelen == 0) {
-                    throw new RuntimeException("fetch file from " + info.getId() + " failed");
-                }
-                byte[] buffer = new byte[4096];
+				retfilename.add(filename);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
-                int byteCount = 0;
+		return retfilename;
+	}
 
-                System.out.println("Current fetching node is " + workerinfo.getId());
-                String filename = "JobID_" + JobID + "_FromMaper_" + info.getId() + "_forReducerTask_" + taskID;
+	/* Rename the Mapper results for further reduce task processing */
+	public static List<String> copyMapperResult(Worker worker, long jobID,
+			WorkerInfo workerInfo, int taskID) throws IOException {
+		List<String> fileList = worker.getfileList();
+		List<String> localfile = new ArrayList<String>();
+		List<String> destlist = new ArrayList<String>();
 
-                FileOutputStream output = new FileOutputStream(Config.DataDirectory + "/" + filename);
+		String start = "Job_" + jobID;
+		String end = "ForReducer_" + workerInfo.getId();
+		synchronized (fileList) {
+			for (String tempfilename : fileList) {
+				if (tempfilename.startsWith(start)
+						&& tempfilename.endsWith(end)) {
+					localfile.add(tempfilename);
+				}
+			}
+		}
 
-                while (byteCount < filelen) {
-                    int n = inputStream.read(buffer);
-                    output.write(buffer, 0, n);
-                    byteCount += n;
-                }
+		if (localfile.size() == 0) {
+			return null;
+		}
 
-                output.close();
+		for (String filename : localfile) {
+			String destfile = "JobID_" + jobID + "_FromMaper_"
+					+ workerInfo.getId() + "_forReducerTask_" + taskID;
 
-                retfilename.add(filename);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+			FileOutputStream dest = new FileOutputStream(Config.DataDirectory
+					+ "/" + destfile);
 
-        return retfilename;
-    }
+			File srcfile = new File(Config.DataDirectory + "/" + filename);
 
-    /*Rename the Mapper results for further reduce task processing*/
-    public static String copyMapperResult(Worker worker, long jobID, WorkerInfo workerInfo, int taskID) throws IOException {
-        List<String> fileList = worker.getfileList();
+			Path srcpath = Paths.get(srcfile.getPath());
 
-        String filename = null;
+			Files.copy(srcpath, dest);
 
-        String start = "Job_" + jobID;
-        String end = "ForReducer_" + workerInfo.getId();
-        synchronized (fileList) {
-            for (String tempfilename : fileList) {
-                if (tempfilename.startsWith(start) && tempfilename.endsWith(end)) {
-                    filename = tempfilename;
-                    break;
-                }
-            }
-        }
+			dest.close();
 
-        if (filename == null) {
-            return null;
-        }
+			destlist.add(destfile);
+		}
 
-        String destfile = "JobID_" + jobID + "_FromMaper_" + workerInfo.getId() + "_forReducerTask_" + taskID;
+		return destlist;
 
-        FileOutputStream dest = new FileOutputStream(Config.DataDirectory + "/" + destfile);
+	}
 
-        File srcfile = new File(Config.DataDirectory + "/" + filename);
+	public void run() {
+		try {
+			File file = new File(Config.DataDirectory + "/" + filename);
+			int length = (int) file.length();
 
-        Path srcpath = Paths.get(srcfile.getPath());
+			outputStream.write(inttobyte(length));
 
-        Files.copy(srcpath, dest);
+			FileInputStream inputStream = new FileInputStream(file);
+			byte[] buffer = new byte[4096];
 
-        dest.close();
+			int buffersize = 0;
 
-        return destfile;
+			while ((buffersize = inputStream.read(buffer)) != -1) {
+				outputStream.write(buffer, 0, buffersize);
+			}
 
-    }
+			inputStream.close();
+			outputStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-    public void run() {
-        try {
-            File file = new File(Config.DataDirectory + "/" + filename);
-            int length = (int) file.length();
-
-            outputStream.write(inttobyte(length));
-
-            FileInputStream inputStream = new FileInputStream(file);
-            byte[] buffer = new byte[4096];
-
-            int buffersize = 0;
-
-            while ((buffersize = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, buffersize);
-            }
-
-            inputStream.close();
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
+	}
 }

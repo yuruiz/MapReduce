@@ -4,15 +4,26 @@ import worker.WorkerInfo;
 
 import java.util.List;
 
+/**
+ * An encapsulation of all the configuration setting
+ * 
+ * @author siyuwei
+ *
+ */
 public class Config {
 
 	public static String MASTER_IP;
+	// information of all the workers
 	public static List<WorkerInfo> info;
+	// the directory of the source data being stored
 	public static String DataDirectory;
+	// the id of the worker
 	public static int workerID;
 	public static int MASTER_PORT;
 	public static int POLLING_PORT;
+	// polling timeout
 	public static int TIME_OUT;
+	// 
 	public static int SLEEP_TIME;
 
 	public static void setup(String[] args) {

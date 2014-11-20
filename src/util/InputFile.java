@@ -5,6 +5,14 @@ import java.util.List;
 
 import worker.WorkerInfo;
 
+/**
+ * This class represents a file abstraction in the system. As a file might be
+ * replicated by several different workers. A list of locations is stored. Also,
+ * a file has information about the amount of records on it.
+ * 
+ * @author siyuwei
+ *
+ */
 public class InputFile implements Serializable {
 	/**
 	 * 

@@ -26,19 +26,35 @@ import util.Message;
 import util.Message.MessageType;
 import util.Partition;
 
+/**
+ * The master implementation of the map reduce framework. This class acts as the
+ * coordinator of the whole system. The master gets user command from the UI. It
+ * then takes care of assign map/reduce tasks. Polling workers and remove failed
+ * workers. When a failure is detected, the master handles it and the map reduce
+ * result will still be correct unless part of the original data files are not
+ * available.
+ * 
+ * @author siyuwei
+ *
+ */
 public class Master implements Runnable {
 
+	// the thread that is doing polling
 	private MasterHeartBeat hearBeat;
+	// jobs that is currently running
 	private List<MasterJob> runningJobs;
+	// job id to job information mapping
 	private Map<Long, MasterJob> idToJob;
+	// the data file system manager
 	private DFSManager manager;
+	// all the workers
 	private List<WorkerInfo> workers;
+	// workers that have failed
 	private List<WorkerInfo> failedWorkers;
+	// the workers that are currently running
 	private List<WorkerInfo> workingWorkers;
+
 	private boolean shutDown;
-
-	private Deque<ClientJob> toBeDone;
-
 	private final int port;
 
 	public Master() {
@@ -59,6 +75,7 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * remove the failed worker from working worker and then handle this failure
 	 * 
 	 * @param failed
 	 */
@@ -71,6 +88,7 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * handle the failed map tasks and reduce tasks
 	 * 
 	 * @param failed
 	 */
@@ -80,16 +98,26 @@ public class Master implements Runnable {
 
 	}
 
+	/**
+	 * shut down the server
+	 */
 	public void shutDown() {
 		this.shutDown = true;
 	}
 
 	/**
+	 * Handle the reduce tasks the failed worker is taking care of
 	 * 
 	 * @param failedReduce
 	 */
 	private void handleReduceFailure(WorkerInfo failed) {
+		/*
+		 * Get all the reduce tasks the failed worker is running
+		 */
 		List<ReduceTask> failedReduce = failed.getReduceTasks();
+		/*
+		 * Find backup workers with relatively fewer tasks running
+		 */
 		List<WorkerInfo> backups = this.getIdleWorkers(failedReduce.size());
 		/*
 		 * Reassign reduce task to working workers
@@ -102,12 +130,16 @@ public class Master implements Runnable {
 					|| !runningJobs.contains(job)) {
 				continue;
 			}
-			
-			System.out.println("reach");
+			/*
+			 * Reassign this task to another worker
+			 */
 			WorkerInfo backup = backups.get(i % backups.size());
 			Message m = new Message();
 			m.setType(MessageType.REDUCE_REQ);
 			m.setReduceTask(task);
+			/*
+			 * Send the task to the back up server
+			 */
 			try {
 				Socket socket = new Socket(backup.getIpAddress(),
 						backup.getPort());
@@ -115,35 +147,42 @@ public class Master implements Runnable {
 						socket.getOutputStream());
 				out.writeObject(m);
 				socket.close();
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
 		}
+		// clear the tasks on the failed worker
 		failed.setReduceTasks(new ArrayList<ReduceTask>());
 		failed.setMapTasks(new ArrayList<MapTask>());
 
 	}
 
 	/**
-	 * Reassign the map tasks of the failed worker
+	 * Reassign the map tasks of the failed worker to other workers
 	 * 
 	 * @param failed
-	 * @param failedMap
+	 *            the failing worker
 	 */
 	private void handleMapFailure(WorkerInfo failed) {
+		// map tasks that are running on the failed worker
 		List<MapTask> failedMap = failed.getMapTasks();
+		// get back up workers
 		List<WorkerInfo> backups = getIdleWorkers(failedMap.size());
 		for (int i = 0; i < failedMap.size(); i++) {
+			/*
+			 * reassign the failed map tasks to backup workers
+			 */
 			MapTask t = failedMap.get(i);
 			WorkerInfo backup = backups.get(i % backups.size());
 			t.setWorker(backup);
 
 			MasterJob job = idToJob.get(t.getJobId());
+
+			/*
+			 * if the failed worker is also the reducer for this map task
+			 * reassign a reducer
+			 */
 			if (runningJobs.contains(job)) {
 				synchronized (job) {
 					job.addMapTask(t);
@@ -156,6 +195,9 @@ public class Master implements Runnable {
 				}
 			}
 
+			/*
+			 * send the map task to the back up worker
+			 */
 			Message m = new Message();
 			m.setType(MessageType.MAP_REQ);
 			m.setMapTask(t);
@@ -166,11 +208,7 @@ public class Master implements Runnable {
 						socket.getOutputStream());
 				out.writeObject(m);
 				socket.close();
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -178,6 +216,7 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * When a worker recovers from failure, add it back to working servers
 	 * 
 	 * @param recovered
 	 */
@@ -188,10 +227,19 @@ public class Master implements Runnable {
 		failedWorkers.remove(recovered);
 	}
 
+	/**
+	 * start running the master
+	 */
 	@Override
 	public void run() {
 		try {
+			/*
+			 * first of all, start the heart beat thread
+			 */
 			new Thread(hearBeat).start();
+			/*
+			 * open the server socket on master that listens for worker messages
+			 */
 			ServerSocket server = new ServerSocket(port);
 			while (!shutDown) {
 				Socket worker = server.accept();
@@ -199,25 +247,38 @@ public class Master implements Runnable {
 						worker.getOutputStream());
 				ObjectInputStream in = new ObjectInputStream(
 						worker.getInputStream());
+				/*
+				 * read a message from worker, start a separate thread for
+				 * handling it
+				 */
 				Message m = (Message) in.readObject();
 				new Thread(new MessageHandler(m, worker)).start();
 				out.close();
 
 			}
 			server.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * This method takes in a message from worker and handles it regarding the
+	 * message type
+	 * 
+	 * @param m
+	 */
 	private void handleMessage(Message m) {
 		MasterJob job;
 		switch (m.getType()) {
+		/*
+		 * handle the message that a map task has finished
+		 */
 		case MAP_RES:
+			/*
+			 * mark the map task as finished, if all map tasks of a job are
+			 * finished start sending reduce tasks
+			 */
 			MapTask map = m.getMapTask();
 			job = idToJob.get(map.getJobId());
 			job.finishMapTask(map);
@@ -225,7 +286,14 @@ public class Master implements Runnable {
 				this.sendReduceTask(job);
 			}
 			break;
+		/*
+		 * handle the message that a reduce task has finished
+		 */
 		case REDUCE_RES:
+			/*
+			 * mark the reduce task as finished, if all reduce tasks are
+			 * finished, remove the job from running jobs
+			 */
 			ReduceTask reduce = m.getReduceTask();
 			job = idToJob.get(reduce.getJobId());
 			job.finishReduceTask(reduce);
@@ -234,19 +302,30 @@ public class Master implements Runnable {
 			}
 			break;
 		case WORKER_REG:
+			/*
+			 * a worker indicates that it wants to join the group, add it to the
+			 * group of workers. Add the data files the worker reports to the
+			 * file pool
+			 */
 			WorkerInfo newWorker = m.getReceiver();
 
 			Log.log("worker registered:" + newWorker.getId() + " "
 					+ newWorker.getPort());
 
-			workingWorkers.add(newWorker);
-			if (!workers.contains(newWorker)) {
-				workers.add(newWorker);
+			synchronized (workingWorkers) {
+				workingWorkers.add(newWorker);
+				if (!workers.contains(newWorker)) {
+					workers.add(newWorker);
+				}
 			}
 
+			/*
+			 * Initialize the new worker configuration
+			 */
 			newWorker.setMapTasks(new ArrayList<MapTask>());
 			newWorker.setReduceTasks(new ArrayList<ReduceTask>());
 			List<InputFile> inputFiles = m.getInputs();
+
 			if (inputFiles == null) {
 				break;
 			}
@@ -260,6 +339,13 @@ public class Master implements Runnable {
 
 	}
 
+	/**
+	 * The message handler class that will call master's handling method and run
+	 * it on a separate thread
+	 * 
+	 * @author siyuwei
+	 *
+	 */
 	private class MessageHandler implements Runnable {
 
 		private Message m;
@@ -272,11 +358,12 @@ public class Master implements Runnable {
 
 		@Override
 		public void run() {
+			// handle the message and then closes the socket
 			handleMessage(m);
 			try {
 				socket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				// ignore close error
 				e.printStackTrace();
 			}
 		}
@@ -284,7 +371,10 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * starts a new job execution required by the client which contains map and
+	 * reduce tasks
 	 * 
+	 * @param job
 	 */
 	public void newJob(ClientJob job) {
 
@@ -294,22 +384,31 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * return the list of running workers
 	 * 
-	 * @return
+	 * @return the running worker list
 	 */
 	public List<WorkerInfo> getWorkers() {
 		return workingWorkers;
 	}
 
+	/**
+	 * The thread that handles a client job
+	 * 
+	 * @author siyuwei
+	 *
+	 */
 	private class ServiceHandler implements Runnable {
 
 		private ClientJob job;
 
 		public ServiceHandler(ClientJob job) {
 			this.job = job;
-
 		}
 
+		/**
+		 * divide the source data and assign the map tasks to workers
+		 */
 		@Override
 		public void run() {
 			List<Partition> allPartitions = new ArrayList<Partition>();
@@ -320,25 +419,42 @@ public class Master implements Runnable {
 	}
 
 	/**
-	 * Assign the map tasks to all the working workers
+	 * Assign the map tasks to all the working workers available
 	 * 
 	 * @param partitions
+	 *            all the data partitions
 	 * @param job
+	 *            the client job which defined the map/reduce method
 	 * @param load
+	 *            expected record load on a mapper
 	 */
 	public void assignMapTask(List<Partition> partitions, ClientJob job,
 			int load) {
 
+		/*
+		 * predefine the reducers for this job, achieve relative optimal load
+		 * balance
+		 */
 		List<WorkerInfo> reducers = this.getIdleWorkers(job.getMaxReduceFile());
-
 		Log.log(workingWorkers.size());
+
 		synchronized (workingWorkers) {
 
+			/*
+			 * Assign job id by the current time in milliseconds, guarantee no
+			 * duplicate id
+			 */
 			long jobId = System.currentTimeMillis();
 
+			/*
+			 * Initialize the reduce task settings
+			 */
 			List<ReduceTask> tasks = new ArrayList<ReduceTask>();
 			int reduceBaseId = 0;
 			for (WorkerInfo reducer : reducers) {
+				/*
+				 * create a new reduce task, set properties
+				 */
 				ReduceTask r = new ReduceTask();
 				r.setMappers(new ArrayList<WorkerInfo>(workingWorkers));
 				r.setReducer(reducer);
@@ -350,7 +466,7 @@ public class Master implements Runnable {
 				tasks.add(r);
 			}
 			/*
-			 * Create a new job
+			 * Create a new master job for master to track
 			 */
 			MasterJob masterJob = new MasterJob();
 			masterJob.setId(jobId);
@@ -363,7 +479,9 @@ public class Master implements Runnable {
 			 * Create a new map task for each worker
 			 */
 			for (WorkerInfo worker : workingWorkers) {
-
+				/*
+				 * create a new map task, set the properties
+				 */
 				MapTask t = new MapTask(masterJob.getId(), worker, 0);
 				t.setTaskId(baseId);
 				t.setMethod(job);
@@ -380,13 +498,16 @@ public class Master implements Runnable {
 			int i = 0;
 			for (MapTask task : masterJob.getMappers()) {
 
+				/*
+				 * keep assigning partitions when the amount of records of this
+				 * work has not reached average
+				 */
 				while (task.getLoad() <= load) {
 					if (i >= partitions.size()) {
 						break;
 					}
 					Partition p = partitions.get(i);
 					task.addPartition(p);
-					// System.out.println(p.getLength());
 					task.increaseLoad(p.getLength());
 					i++;
 
@@ -404,17 +525,14 @@ public class Master implements Runnable {
 				message.setType(MessageType.MAP_REQ);
 				message.setMapTask(task);
 				try {
+					// send the map request to each mapper
 					Socket toWorker = new Socket(task.getWorker()
 							.getIpAddress(), task.getWorker().getPort());
 					ObjectOutputStream out = new ObjectOutputStream(
 							toWorker.getOutputStream());
 					out.writeObject(message);
 					toWorker.close();
-				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
@@ -426,16 +544,20 @@ public class Master implements Runnable {
 	}
 
 	/**
-	 * Upon receiving the confirmation that all maps are finished, start
-	 * reducing
+	 * Upon receiving the confirmation that all maps are finished, start sending
+	 * reduce tasks to reducers
 	 * 
 	 * @param jobId
 	 */
 	private void sendReduceTask(MasterJob job) {
 		List<ReduceTask> tasks = job.getReducers();
+
 		for (ReduceTask task : tasks) {
 			WorkerInfo reducer = task.getExecutor();
 			try {
+				/*
+				 * Send the reduce task to each reducer for execution
+				 */
 				Log.log("send reduce: " + task.getTaskId() + " "
 						+ reducer.getIpAddress() + " " + reducer.getPort());
 				Socket socket = new Socket(reducer.getIpAddress(),
@@ -449,10 +571,8 @@ public class Master implements Runnable {
 				out.writeObject(m);
 				socket.close();
 			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -467,10 +587,17 @@ public class Master implements Runnable {
 	 */
 	private List<WorkerInfo> getIdleWorkers(int num) {
 		synchronized (workingWorkers) {
+			/*
+			 * Build a priority queue according to the amount of tasks that is
+			 * currently running on a worker
+			 */
 			num = Math.min(num, workingWorkers.size());
 			List<WorkerInfo> idleWorkers = new ArrayList<WorkerInfo>();
 			PriorityQueue<WorkerInfo> queue = new PriorityQueue<WorkerInfo>();
 			queue.addAll(workingWorkers);
+			/*
+			 * retrieve the nth idlest workers
+			 */
 			for (int i = 0; i < num; i++) {
 				idleWorkers.add(queue.poll());
 			}
@@ -478,6 +605,16 @@ public class Master implements Runnable {
 		}
 	}
 
+	/**
+	 * for all the data of a given client job， divide them evenly into
+	 * partitions for assigning to workers
+	 * 
+	 * @param list
+	 *            the list of assigned partitions
+	 * @param job
+	 *            client job
+	 * @return expected amount of record on each worker
+	 */
 	public int divideData(List<Partition> list, ClientJob job) {
 		List<String> files = job.getfiles();
 		List<InputFile> data = new ArrayList<InputFile>();
@@ -486,7 +623,12 @@ public class Master implements Runnable {
 		for (String file : files) {
 			InputFile input = manager.getFile(file);
 			if (input == null) {
-				// TODO Handle exception
+				/*
+				 * if a file is not in the file system, skip it as we have no
+				 * way going around it, task will still be running but
+				 * correctness cannot be guaranteed
+				 */
+				continue;
 			} else {
 				System.out.println(input.getFileName());
 				data.add(input);
@@ -494,14 +636,18 @@ public class Master implements Runnable {
 			}
 		}
 
+		/*
+		 * expected load of every worker is the average
+		 */
 		int expectedSize = total / workingWorkers.size();
 		Log.log("total: " + total + "average: " + expectedSize);
 
 		for (InputFile file : data) {
 			int size = file.getLength();
 
-			// For a file smaller
 			if (size <= expectedSize) {
+				// For a file smaller than expected size, make it a separate
+				// size
 				Partition p = new Partition();
 				p.setFileName(file.getFileName());
 				p.setOwners(file.getLocations());
@@ -512,6 +658,9 @@ public class Master implements Runnable {
 			}
 
 			while (size > 0) {
+				/*
+				 * if a file is large, divide it into separate partitions
+				 */
 				Partition p = new Partition();
 				p.setFileName(file.getFileName());
 				p.setOwners(file.getLocations());
@@ -529,8 +678,5 @@ public class Master implements Runnable {
 
 	}
 
-	public static void main() {
-
-	}
 
 }

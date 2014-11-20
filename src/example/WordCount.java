@@ -9,6 +9,13 @@ import java.util.Scanner;
 import task.ClientJob;
 import util.KeyValuePair;
 
+/**
+ * A example that conforms to the job interface which implements basic word
+ * count
+ * 
+ * @author siyuwei
+ *
+ */
 public class WordCount implements ClientJob {
 
 	/**

@@ -184,6 +184,7 @@ public class FileTransmission extends Thread {
 		List<String> fileList = worker.getfileList();
 		List<String> localfile = new ArrayList<String>();
 		List<String> destlist = new ArrayList<String>();
+		int count = 0;
 
 		String start = "Job_" + jobID;
 		String end = "ForReducer_" + workerInfo.getId();
@@ -202,7 +203,7 @@ public class FileTransmission extends Thread {
 
 		for (String filename : localfile) {
 			String destfile = "JobID_" + jobID + "_FromMaper_"
-					+ workerInfo.getId() + "_forReducerTask_" + taskID;
+					+ workerInfo.getId() + "_forReducerTask_" + taskID + "dup_"+ count;
 
 			FileOutputStream dest = new FileOutputStream(Config.DataDirectory
 					+ "/" + destfile);
@@ -216,6 +217,7 @@ public class FileTransmission extends Thread {
 			dest.close();
 
 			destlist.add(destfile);
+			count++;
 		}
 
 		return destlist;

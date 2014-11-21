@@ -108,4 +108,18 @@ public class ReduceTask implements Serializable {
 		this.workerId = workerId;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof ReduceTask)) {
+			return false;
+		}
+		ReduceTask t = (ReduceTask) o;
+		return this.jobId == t.jobId && this.taskId == t.taskId;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) jobId + taskId;
+	}
+
 }

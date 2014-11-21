@@ -26,11 +26,4 @@ public interface ClientJob extends Serializable, MapReduceMethod {
 	 */
 	public int getMaxReduceFile();
 
-	/**
-	 * The id of this job
-	 * 
-	 * @return
-	 */
-	public int getId();
-
 }

@@ -7,7 +7,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -303,6 +302,33 @@ public class Master implements Runnable {
 			job.finishReduceTask(reduce);
 			if (job.allMapFinished() && job.allReduceFinished()) {
 				runningJobs.remove(job);
+				/*
+				 * Upon a job finished, remove this map task from the worker's
+				 * list
+				 */
+				for (MapTask t : job.getMappers()) {
+					for (WorkerInfo w : workingWorkers) {
+						if (w.equals(t.getWorker())) {
+							synchronized (w) {
+								w.removeMapTask(t);
+							}
+						}
+					}
+				}
+				/*
+				 * Upon a job finished, remove this reduce task from the
+				 * worker's list
+				 */
+				for (ReduceTask t : job.getReducers()) {
+					for (WorkerInfo w : workingWorkers) {
+						if (w.equals(t.getExecutor())) {
+							synchronized (w) {
+								w.removeReduceTask(t);
+							}
+						}
+					}
+				}
+
 			}
 			break;
 		case WORKER_REG:

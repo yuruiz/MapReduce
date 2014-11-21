@@ -1,25 +1,32 @@
 package task;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import util.Partition;
-
+/**
+ * The job abstraction on the master's side. Each job has a unique id. It keeps
+ * tracking of all the running/finished map/reduce tasks.
+ * 
+ * @author siyuwei
+ *
+ */
 public class MasterJob {
+
+	// running map tasks
 	private List<MapTask> mappers;
+	// running reduce tasks
 	private List<ReduceTask> reducers;
+	// finished map tasks
 	private List<MapTask> finishedMaps;
+	// finished reduce tasks
 	private List<ReduceTask> finishedReduces;
-	private Set<Partition> partitions;
+
 	private MapReduceMethod job;
 	private long id;
 
 	public MasterJob() {
 		mappers = new ArrayList<MapTask>();
 		reducers = new ArrayList<ReduceTask>();
-		partitions = new HashSet<Partition>();
 		finishedMaps = new ArrayList<MapTask>();
 		finishedReduces = new ArrayList<ReduceTask>();
 
@@ -32,19 +39,33 @@ public class MasterJob {
 		}
 	}
 
-	public boolean allMapFinished() {
-		return mappers.size() == 0;
-	}
-
-	public boolean allReduceFinished() {
-		return reducers.size() == 0;
-	}
-
+	/**
+	 * 
+	 * @param reduce
+	 */
 	public void finishReduceTask(ReduceTask reduce) {
 		if (reducers.contains(reduce)) {
 			reducers.remove(reduce);
 			finishedReduces.add(reduce);
 		}
+	}
+
+	/**
+	 * check if all map tasks are finished
+	 * 
+	 * @return
+	 */
+	public boolean allMapFinished() {
+		return mappers.size() == 0;
+	}
+
+	/**
+	 * Check if all reduce tasks are finished
+	 * 
+	 * @return
+	 */
+	public boolean allReduceFinished() {
+		return reducers.size() == 0;
 	}
 
 	public List<MapTask> getMappers() {
@@ -61,10 +82,6 @@ public class MasterJob {
 		return reducers;
 	}
 
-	public void addPartition(Partition p) {
-		partitions.add(p);
-	}
-
 	public void removeMapTask(MapTask t) {
 		mappers.remove(t);
 	}
@@ -75,10 +92,6 @@ public class MasterJob {
 
 	public void setReducers(List<ReduceTask> reducers) {
 		this.reducers = reducers;
-	}
-
-	public Set<Partition> getPartitions() {
-		return partitions;
 	}
 
 	public long getId() {

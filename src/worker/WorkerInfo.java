@@ -66,6 +66,14 @@ public class WorkerInfo implements Serializable, Comparable<WorkerInfo> {
 		this.id = id;
 	}
 
+	public void removeMapTask(MapTask t) {
+		mapTasks.remove(t);
+	}
+
+	public void removeReduceTask(ReduceTask t) {
+		reduceTasks.remove(t);
+	}
+
 	public int getPollingPort() {
 		return pollingPort;
 	}

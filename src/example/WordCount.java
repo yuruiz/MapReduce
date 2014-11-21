@@ -23,6 +23,9 @@ public class WordCount implements ClientJob {
 	 */
 	private static final long serialVersionUID = 114150716109249973L;
 
+	/**
+	 * Iterate over the words, for each word, emit "word 1"
+	 */
 	@Override
 	public List<KeyValuePair> map(String key, String value) {
 
@@ -34,28 +37,36 @@ public class WordCount implements ClientJob {
 			KeyValuePair pair = new KeyValuePair(word, "1");
 			list.add(pair);
 		}
-
+		/*
+		 * Slow down this a little bit so we can shut it down
+		 */
 		try {
 			Thread.sleep(1);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return list;
 	}
 
+	/**
+	 * Count the number of appearance of a word
+	 */
 	@Override
 	public KeyValuePair reduce(String key, List<String> values) {
 		int sum = 0;
+
 		for (String s : values) {
 			sum += Integer.parseInt(s);
 		}
+		/*
+		 * Slow down this a little bit so we can shut it down
+		 */
 		try {
 			Thread.sleep(1);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 		return new KeyValuePair(key, String.valueOf(sum));
 	}
 
@@ -80,12 +91,6 @@ public class WordCount implements ClientJob {
 	@Override
 	public int getMaxReduceFile() {
 		return 3;
-	}
-
-	@Override
-	public int getId() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 }

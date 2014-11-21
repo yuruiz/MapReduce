@@ -144,6 +144,7 @@ public class FileTransmission extends Thread {
 				int filelen = bytetoint(len);
 
 				if (filelen == 0) {
+					socket.close();
 					throw new RuntimeException("fetch file from "
 							+ info.getId() + " failed");
 				}
@@ -166,6 +167,7 @@ public class FileTransmission extends Thread {
 				}
 
 				output.close();
+				socket.close();
 
 				retfilename.add(filename);
 			} catch (UnknownHostException e) {
@@ -203,7 +205,8 @@ public class FileTransmission extends Thread {
 
 		for (String filename : localfile) {
 			String destfile = "JobID_" + jobID + "_FromMaper_"
-					+ workerInfo.getId() + "_forReducerTask_" + taskID + "dup_"+ count;
+					+ workerInfo.getId() + "_forReducerTask_" + taskID + "dup_"
+					+ count;
 
 			FileOutputStream dest = new FileOutputStream(Config.DataDirectory
 					+ "/" + destfile);

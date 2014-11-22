@@ -14,6 +14,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This class extends thread and run a reduce task within it
+ * 
+ * @author siyuwei
+ *
+ */
 public class ReducerThread extends Thread {
 
 	private ReduceTask task;
@@ -89,6 +95,9 @@ public class ReducerThread extends Thread {
 			mesg.setType(Message.MessageType.REDUCE_RES);
 			mesg.setJobId(jobID);
 			mesg.setReduceTask(task);
+			mesg.setResult("Reduce task" + task.getTaskId()
+					+ " result is on worker " + info.getId() + " named:" + "\t"
+					+ Config.DataDirectory + "/" + outputfilename);
 			objectOutputStream.writeObject(mesg);
 			objectOutputStream.close();
 			socket.close();

@@ -23,8 +23,9 @@ public class Config {
 	public static int POLLING_PORT;
 	// polling timeout
 	public static int TIME_OUT;
-	// 
+	//
 	public static int SLEEP_TIME;
+	public static int MAX_REDUCE;
 
 	public static void setup(String[] args) {
 
@@ -43,6 +44,7 @@ public class Config {
 		POLLING_PORT = master.getPollingPort();
 		TIME_OUT = p.getNumValue("TIME_OUT");
 		SLEEP_TIME = p.getNumValue("SLEEP_TIME");
+		MAX_REDUCE = p.getNumValue("MAX_REDUCE");
 
 	}
 

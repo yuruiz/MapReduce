@@ -9,6 +9,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+/**
+ * This class implemented the heart beat on the worker side
+ * 
+ * @author yuruiz
+ *
+ */
 public class WorkerHeartbeat extends Thread {
 
 	private Worker worker;
@@ -22,7 +28,10 @@ public class WorkerHeartbeat extends Thread {
 
 		System.out.println("Heart beat start");
 
-		/*Create the listen socket to receive the heart beat request from master node*/
+		/*
+		 * Create the listen socket to receive the heart beat request from
+		 * master node
+		 */
 		ServerSocket serverSocket = null;
 		try {
 			System.out.println("Open server at: "
@@ -35,7 +44,7 @@ public class WorkerHeartbeat extends Thread {
 		assert serverSocket != null;
 
 		try {
-			/*Processing the Heart beat request*/
+			/* Processing the Heart beat request */
 			while (true) {
 				Socket socket = serverSocket.accept();
 				Scanner s = new Scanner(socket.getInputStream());

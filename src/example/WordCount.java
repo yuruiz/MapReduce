@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import task.ClientJob;
+import util.Config;
 import util.KeyValuePair;
 
 /**
@@ -31,12 +32,16 @@ public class WordCount implements ClientJob {
 
 		List<KeyValuePair> list = new ArrayList<KeyValuePair>();
 
+		/*
+		 * Split the line into words, for each word, write down "word, 1"
+		 */
 		String[] words = value.split("\\W+");
 		for (String word : words) {
 			word = word.toLowerCase();
 			KeyValuePair pair = new KeyValuePair(word, "1");
 			list.add(pair);
 		}
+
 		/*
 		 * Slow down this a little bit so we can shut it down
 		 */
@@ -55,6 +60,9 @@ public class WordCount implements ClientJob {
 	public KeyValuePair reduce(String key, List<String> values) {
 		int sum = 0;
 
+		/*
+		 * Calculate the number appearances of each word
+		 */
 		for (String s : values) {
 			sum += Integer.parseInt(s);
 		}
@@ -81,7 +89,6 @@ public class WordCount implements ClientJob {
 			}
 			s.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -90,7 +97,7 @@ public class WordCount implements ClientJob {
 
 	@Override
 	public int getMaxReduceFile() {
-		return 3;
+		return Config.MAX_REDUCE;
 	}
 
 }

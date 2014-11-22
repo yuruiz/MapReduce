@@ -29,8 +29,9 @@ public class Message implements Serializable {
 	}
 
 	private static final long serialVersionUID = 7264137218310503076L;
-
+	// message type
 	private MessageType type;
+
 	private MapTask mapTask;
 	private ReduceTask reduceTask;
 	private String fetcheFilename;
@@ -41,7 +42,10 @@ public class Message implements Serializable {
 	private long jobId;
 	// info of the worker that is requiring register
 	private WorkerInfo worker;
+	// input files for map
 	private List<InputFile> inputs;
+	// reduce result address
+	private String result;
 
 	public void setType(MessageType type) {
 		this.type = type;
@@ -105,6 +109,14 @@ public class Message implements Serializable {
 
 	public List<InputFile> getInputs() {
 		return this.inputs;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public void setResult(String result) {
+		this.result = result;
 	}
 
 }

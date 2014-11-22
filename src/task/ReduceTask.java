@@ -6,6 +6,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class is the data encapsulation of a reduce task
+ * 
+ * @author siyuwei
+ *
+ */
 public class ReduceTask implements Serializable {
 
 	/**

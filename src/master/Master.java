@@ -18,6 +18,7 @@ import task.ClientJob;
 import task.MapTask;
 import task.MasterJob;
 import task.ReduceTask;
+import task.MasterJob.Status;
 import util.Config;
 import util.InputFile;
 import util.Log;
@@ -42,6 +43,8 @@ public class Master implements Runnable {
 	private MasterHeartBeat hearBeat;
 	// jobs that is currently running
 	private List<MasterJob> runningJobs;
+	// all the jobs including those that have finished
+	private List<MasterJob> allJobs;
 	// job id to job information mapping
 	private Map<Long, MasterJob> idToJob;
 	// the data file system manager
@@ -64,6 +67,7 @@ public class Master implements Runnable {
 		failedWorkers = new CopyOnWriteArrayList<WorkerInfo>();
 		workingWorkers = new CopyOnWriteArrayList<WorkerInfo>();
 		runningJobs = new CopyOnWriteArrayList<MasterJob>();
+		allJobs = new CopyOnWriteArrayList<MasterJob>();
 		hearBeat = new MasterHeartBeat(Config.POLLING_PORT, Config.TIME_OUT,
 				Config.SLEEP_TIME);
 		hearBeat.setMaster(this);
@@ -144,8 +148,8 @@ public class Master implements Runnable {
 						backup.getPort());
 				ObjectOutputStream out = new ObjectOutputStream(
 						socket.getOutputStream());
-				Log.log("send reduce: " + task.getTaskId() + " "
-						+ backup.getPort());
+				// Log.log("send reduce: " + task.getTaskId() + " "
+				// + backup.getPort());
 				out.writeObject(m);
 				socket.close();
 			} catch (Exception e) {
@@ -282,10 +286,8 @@ public class Master implements Runnable {
 			 */
 			MapTask map = m.getMapTask();
 			job = idToJob.get(map.getJobId());
-			Log.log(job.getMappers().size());
 			job.finishMapTask(map);
-			if (job.allMapFinished()) {
-				Log.log("map finished, assign reduce");
+			if (job.allMapFinished() && job.status == Status.running) {
 				this.sendReduceTask(job);
 			}
 			break;
@@ -300,8 +302,10 @@ public class Master implements Runnable {
 			ReduceTask reduce = m.getReduceTask();
 			job = idToJob.get(reduce.getJobId());
 			job.finishReduceTask(reduce);
+			System.out.println(m.getResult());
 			if (job.allMapFinished() && job.allReduceFinished()) {
 				runningJobs.remove(job);
+				job.status = Status.finished;
 				/*
 				 * Upon a job finished, remove this map task from the worker's
 				 * list
@@ -410,6 +414,10 @@ public class Master implements Runnable {
 	 */
 	public void newJob(ClientJob job) {
 
+		if (workingWorkers.size() == 0) {
+			Log.log("Zero workers have registered, job cannot be run, try later");
+			return;
+		}
 		ServiceHandler handler = new ServiceHandler(job);
 		new Thread(handler).start();
 
@@ -451,6 +459,22 @@ public class Master implements Runnable {
 	}
 
 	/**
+	 * Stop a job with the given id
+	 * 
+	 * @param id
+	 */
+	public void stopJob(long id) {
+		MasterJob j = idToJob.get(id);
+		if (j == null) {
+			System.out.println("Unrecognized job id");
+		} else {
+			if (j.status == Status.running) {
+				j.status = Status.stopped;
+			}
+		}
+	}
+
+	/**
 	 * Assign the map tasks to all the working workers available
 	 * 
 	 * @param partitions
@@ -468,7 +492,6 @@ public class Master implements Runnable {
 		 * balance
 		 */
 		List<WorkerInfo> reducers = this.getIdleWorkers(job.getMaxReduceFile());
-		Log.log(workingWorkers.size());
 
 		synchronized (workingWorkers) {
 
@@ -500,11 +523,13 @@ public class Master implements Runnable {
 			/*
 			 * Create a new master job for master to track
 			 */
+			System.out.println("New job created, ID: " + jobId);
 			MasterJob masterJob = new MasterJob();
 			masterJob.setId(jobId);
 			masterJob.setReducers(tasks);
 			masterJob.setJob(job);
 			runningJobs.add(masterJob);
+			allJobs.add(masterJob);
 			idToJob.put(masterJob.getId(), masterJob);
 			int baseId = 0;
 			/*
@@ -524,6 +549,12 @@ public class Master implements Runnable {
 
 			}
 
+			/*
+			 * Assign tasks only if word is not stopped
+			 */
+			if (masterJob.status == Status.stopped) {
+				return;
+			}
 			/*
 			 * Assign partitions to each map task
 			 */
@@ -545,11 +576,6 @@ public class Master implements Runnable {
 
 				}
 
-				System.out.println("send map Task: " + task.getTaskId());
-				Log.log("IP: " + task.getWorker().getIpAddress() + " port: "
-						+ task.getWorker().getPort() + " size: "
-						+ task.getPartitions().size());
-
 				/*
 				 * Send the map task to workers for execution
 				 */
@@ -567,8 +593,6 @@ public class Master implements Runnable {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
-				Log.log("MapTask sent: " + task.getTaskId());
 
 			}
 
@@ -590,8 +614,7 @@ public class Master implements Runnable {
 				/*
 				 * Send the reduce task to each reducer for execution
 				 */
-				Log.log("send reduce: " + task.getTaskId() + " "
-						+ reducer.getIpAddress() + " " + reducer.getPort());
+
 				Socket socket = new Socket(reducer.getIpAddress(),
 						reducer.getPort());
 				ObjectOutputStream out = new ObjectOutputStream(
@@ -662,7 +685,7 @@ public class Master implements Runnable {
 				 */
 				continue;
 			} else {
-				System.out.println(input.getFileName());
+				// System.out.println(input.getFileName());
 				data.add(input);
 				total += input.getLength();
 			}
@@ -672,7 +695,7 @@ public class Master implements Runnable {
 		 * expected load of every worker is the average
 		 */
 		int expectedSize = total / workingWorkers.size();
-		Log.log("total: " + total + "average: " + expectedSize);
+		// Log.log("total: " + total + "average: " + expectedSize);
 
 		for (InputFile file : data) {
 			int size = file.getLength();
@@ -704,10 +727,28 @@ public class Master implements Runnable {
 
 		}
 
-		System.out.println("num of partitions: " + list.size());
+		// System.out.println("num of partitions: " + list.size());
 
 		return expectedSize;
 
 	}
 
+	/**
+	 * print out the status of all the jobs
+	 */
+	public void showJobStatus() {
+		System.out.println("**** Job status: ****");
+		for (MasterJob j : allJobs) {
+			System.out.print("Job Id: " + j.getId() + "\t");
+			System.out.print("Status: " + j.status + "\t");
+			System.out.print("Num of map tasks: " + j.mapTaskSize() + "\t");
+			System.out.print("Num of reduce tasks: " + j.reduceTaskSize());
+			System.out.print("Map tasks remain running: "
+					+ j.getMappers().size() + "\t");
+			System.out.print("Reuce tasks remian running: "
+					+ j.getReducers().size() + "\n");
+		}
+
+		System.out.println("**** end ****");
+	}
 }

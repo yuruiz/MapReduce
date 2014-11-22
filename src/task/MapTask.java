@@ -7,10 +7,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class is the abstraction of a map task
+ * 
+ * @author siyuwei
+ *
+ */
 public class MapTask implements Serializable {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = -5483890248653777591L;
 	private long jobId;
 	private int taskId;
@@ -19,7 +23,9 @@ public class MapTask implements Serializable {
 	private boolean finished = false;
 
 	private WorkerInfo worker;
+	// corresponding reducers
 	private List<WorkerInfo> reducers;
+	// the data partitions the task is going to work on
 	private List<Partition> partitions;
 
 	public MapTask(long id, WorkerInfo worker, int load) {

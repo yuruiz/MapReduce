@@ -1,4 +1,4 @@
-SOURCE=$(shell find example io master task util worker -name '*.java')
+SOURCE=$(shell find example master task util worker -name '*.java')
 CLASSES=$(subst .java,.class,$(SOURCE))
 
 .PHONY: all code clean

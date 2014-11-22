@@ -28,7 +28,8 @@ public class MasterCommandUI {
 		System.out.println("*** Usage ***");
 		System.out.println("Run a map reduce job: run <JobClassName>");
 		System.out.println("Shut down server: shut down");
-		System.out.println("Show all running jobs: print all");
+		System.out.println("Show all jobs information: monitor");
+		System.out.println("Stop a job: stop <JobId>");
 		System.out.println("*** end usage ***");
 
 		/*
@@ -56,6 +57,24 @@ public class MasterCommandUI {
 				break;
 			}
 
+			// case stop a job
+			if (inputs[0].equalsIgnoreCase("stop")) {
+				try {
+					long id = Long.parseLong(inputs[1]);
+					master.stopJob(id);
+				} catch (Exception e) {
+					System.out.println("Illegal id");
+				}
+
+				continue;
+			}
+
+			// case show job status
+			if (inputs[0].equalsIgnoreCase("monitor")) {
+				master.showJobStatus();
+				continue;
+			}
+
 			// case run job
 			if (inputs[0].equalsIgnoreCase("run")) {
 				if (inputs.length < 2) {
@@ -71,6 +90,7 @@ public class MasterCommandUI {
 					Class<?> jobClass = Class.forName(jobName);
 					ClientJob job = (ClientJob) jobClass.newInstance();
 					master.newJob(job);
+					continue;
 
 				} catch (ClassNotFoundException | InstantiationException
 						| IllegalAccessException | NoClassDefFoundError e) {
@@ -79,10 +99,11 @@ public class MasterCommandUI {
 				}
 			}
 
+			System.out.println("Unrecognized Message");
+
 		}
 
 		s.close();
-		System.out.println("exited");
 
 	}
 

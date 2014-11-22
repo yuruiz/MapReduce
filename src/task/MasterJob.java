@@ -23,12 +23,18 @@ public class MasterJob {
 
 	private MapReduceMethod job;
 	private long id;
+	public Status status;
+
+	public enum Status {
+		running, finished, stopped
+	}
 
 	public MasterJob() {
 		mappers = new ArrayList<MapTask>();
 		reducers = new ArrayList<ReduceTask>();
 		finishedMaps = new ArrayList<MapTask>();
 		finishedReduces = new ArrayList<ReduceTask>();
+		status = Status.running;
 
 	}
 
@@ -108,6 +114,24 @@ public class MasterJob {
 
 	public void setJob(MapReduceMethod job) {
 		this.job = job;
+	}
+
+	/**
+	 * Return the total size of map tasks of the job regardless of finished or
+	 * not
+	 * 
+	 * @return
+	 */
+	public int mapTaskSize() {
+		return mappers.size() + finishedMaps.size();
+	}
+
+	/**
+	 * Return the total size of reduce tasks of the job regardless of finished
+	 * or not
+	 */
+	public int reduceTaskSize() {
+		return reducers.size() + finishedReduces.size();
 	}
 
 }
